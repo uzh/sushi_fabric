@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-Version = '20131105-163111'
+Version = '20131107-104530'
 
 require 'csv'
 require 'fileutils'
@@ -19,15 +19,16 @@ config = if File.exist?(config_yml)
          end
 WORKFLOW_MANAGER = config[:workflow_manager]||'druby://localhost:3000'
 GSTORE_DIR = config[:gstore_dir]||'gstore'
-sushi_app_dir = File.expand_path('../..', __FILE__)
+#sushi_app_dir = File.expand_path('../..', __FILE__)
+sushi_app_dir = Dir.pwd
 SUSHI_APP_DIR = config[:sushi_app_dir]||sushi_app_dir
 SCRATCH_DIR = config[:scratch_dir]||'/tmp/scratch'
-
+no_ror = nil
 begin
   ::Project
-  NO_ROR = false
+  no_ror = false
 rescue
-  if File.exist?(File.join(SUSHI_APP_DIR, "app/model"))
+  if File.exist?(File.join(SUSHI_APP_DIR, "app/models"))
     ActiveRecord::Base.establish_connection(
                 :adapter  => 'sqlite3',
                 :database => "#{SUSHI_APP_DIR}/db/development.sqlite3" 
@@ -35,12 +36,14 @@ rescue
     require "#{SUSHI_APP_DIR}/app/models/project"
     require "#{SUSHI_APP_DIR}/app/models/data_set"
     require "#{SUSHI_APP_DIR}/app/models/sample"
-    NO_ROR = false
+    no_ror = false
   else
-    NO_ROR = true
+    no_ror = true
   end
 end
+NO_ROR = no_ror
 
+=begin
 def save_data_set(data_set_arr, headers, rows)
   data_set_hash = Hash[*data_set_arr]
   if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
@@ -74,6 +77,7 @@ def save_data_set(data_set_arr, headers, rows)
     data_set.id
   end
 end
+=end
 
 class ::Hash
   attr_reader :defaults
@@ -400,6 +404,40 @@ rm -rf #{@scratch_dir} || exit 1
     @job_scripts << @job_script
     @result_dataset << next_dataset
   end
+  def save_data_set(data_set_arr, headers, rows)
+    data_set_hash = Hash[*data_set_arr]
+    if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
+      data_set = DataSet.new
+      data_set.name = data_set_hash['DataSetName']
+      data_set.project = project
+      if parent_id = data_set_hash['ParentID'] and parent_data_set = DataSet.find_by_id(parent_id.to_i)
+        data_set.data_set = parent_data_set
+      end
+      if comment = data_set_hash['Comment'] and !comment.to_s.empty?
+        data_set.comment = comment
+      end
+
+      sample_hash = {}
+      rows.each do |row|
+        headers.each_with_index do |header, i|
+         sample_hash[header]=row[i]
+        end
+        sample = Sample.new
+        sample.key_value = sample_hash.to_s
+        sample.save unless sample.saved?
+        data_set.samples << sample
+      end
+
+      data_set.md5 = data_set.md5hexdigest
+      unless data_set.saved?
+        project.data_sets << data_set
+        parent_data_set.data_sets << data_set if parent_data_set
+        data_set.save
+      end
+      data_set.id
+    end
+  end
+
   def run
     test_run
 
