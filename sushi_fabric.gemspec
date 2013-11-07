@@ -6,9 +6,9 @@ require 'sushi_fabric/version'
 Gem::Specification.new do |spec|
   spec.name          = "sushi_fabric"
   spec.version       = SushiFabric::VERSION
-  spec.authors       = ["Masa"]
-  spec.email         = ["masaomi.hatakeyama@gmail.com"]
-  spec.description   = %q{This library provide us with the methods to submit a job cooperating workflow manager.}
+  spec.authors       = ["Functional Genomics Center Zurich"]
+  spec.email         = ["masaomi.hatakeyama@fgcz.uzh.ch"]
+  spec.description   = %q{This library provides us with the methods to submit a job cooperating with workflow manager.}
   spec.summary       = %q{workflow manager client.}
   spec.homepage      = ""
   spec.license       = "MIT"

@@ -1,4 +1,4 @@
-Copyright (c) 2013 Masa
+Copyright (c) 2013 Functional Genomics Center Zurich
 
 MIT License
 
