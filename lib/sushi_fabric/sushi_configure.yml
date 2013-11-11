@@ -1,4 +1,0 @@
---- 
-:workflow_manager: druby://localhost:12345
-:gstore_dir: ~/Desktop/gstore/projects
-:scratch_dir: /tmp/scratch
