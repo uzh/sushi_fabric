@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20131111-112007'
+# Version = '20131111-113448'
 
 require 'csv'
 require 'fileutils'
@@ -13,7 +13,7 @@ module SushiFabric
   class Application < Rails::Application
     # default parameters
     config.workflow_manager = 'druby://localhost:12345'
-    config.gstore_dir = File.join(Dir.pwd, 'gstore/projects')
+    config.gstore_dir = File.join(Dir.pwd, 'public/gstore/projects')
     config.sushi_app_dir = Dir.pwd
     config.scratch_dir = '/tmp/scratch'
   end
