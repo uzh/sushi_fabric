@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20131111-113448'
+# Version = '20131115-105530'
 
 require 'csv'
 require 'fileutils'
@@ -23,6 +23,21 @@ module SushiFabric
   config_file = File.join('./config/environments', mode)
   if File.exist?(config_file + '.rb')
     require config_file
+  else
+    FileUtils.mkdir_p File.dirname(config_file)
+    open(config_file+'.rb', "w") do |out|
+      out.print <<-EOF
+module SushiFabric
+  class Application < Rails::Application
+    # default parameters
+    config.workflow_manager = 'druby://localhost:12345'
+    config.gstore_dir = File.join(Dir.pwd, 'public/gstore/projects')
+    config.sushi_app_dir = Dir.pwd
+    config.scratch_dir = '/tmp/scratch'
+  end
+end
+      EOF
+    end
   end
 
   config = SushiFabric::Application.config
@@ -30,6 +45,10 @@ module SushiFabric
   GSTORE_DIR = config.gstore_dir
   SUSHI_APP_DIR = config.sushi_app_dir
   SCRATCH_DIR = config.scratch_dir
+  
+  unless File.exist?(GSTORE_DIR)
+    FileUtils.mkdir_p GSTORE_DIR
+  end
 
   # check if there is a sqlite3 database of Ruby on Rails
   if defined?(::Project)
