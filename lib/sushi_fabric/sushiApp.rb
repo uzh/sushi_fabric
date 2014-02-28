@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140228-140214'
+# Version = '20140228-142733'
 
 require 'csv'
 require 'fileutils'
@@ -66,6 +66,11 @@ end
     NO_ROR = true
   end
 
+class ::Array
+  def to_hash
+    Hash[*flatten]
+  end
+end
 class ::Hash
   attr_reader :defaults
   alias :set :[]=
