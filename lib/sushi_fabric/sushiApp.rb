@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20131128-161947'
+# Version = '20140228-140214'
 
 require 'csv'
 require 'fileutils'
@@ -690,6 +690,19 @@ rm -rf #{@scratch_dir} || exit 1
     else
       puts "All checks \e[32mPASSED\e[0m"
     end
+  end
+  def builder_selector(base_dir, shown_pattern=nil)
+    selector = {}
+    Dir[base_dir].sort.select{|dir| File.directory?(dir)}.each do |dir|
+      key = if shown_pattern
+              dir.gsub(shown_pattern.keys.first,shown_pattern)
+            else
+              dir
+            end
+      value = File.basename(dir)
+      selector[key] = value
+    end
+    selector
   end
 end
 
