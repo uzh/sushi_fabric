@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140228-142733'
+# Version = '20140228-143416'
 
 require 'csv'
 require 'fileutils'
@@ -67,7 +67,7 @@ end
   end
 
 class ::Array
-  def to_hash
+  def to_h
     Hash[*flatten]
   end
 end
