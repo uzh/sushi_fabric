@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140228-143416'
+# Version = '20140313-161006'
 
 require 'csv'
 require 'fileutils'
@@ -170,6 +170,7 @@ class SushiApp
   attr_accessor :dataset_tsv_file
   attr_accessor :parameterset_tsv_file
   attr_accessor :dataset_sushi_id
+  attr_accessor :data_set
   attr_accessor :project
   attr_accessor :user
   attr_accessor :next_dataset_name
@@ -211,6 +212,24 @@ class SushiApp
       Hash[*row.select{|k,v| k=~/\[#{tag}\]/}.map{|k,v| [k.gsub(/\[.+\]/,'').strip,v]}.flatten]
     }
   end
+  def set_default_parameters
+    # this should be overwritten in a subclass
+  end
+  def dataset_has_column?(colname)
+    flag = false
+    if @dataset_hash
+      @dataset_hash.map{|sample| 
+        sample.each do |key, value|
+          if key =~ /#{colname}/
+            flag = true
+          end
+        end
+        break
+      }
+    end
+    flag
+  end
+
   def set_output_files
     @dataset = {}
     next_dataset.keys.select{|header| header.tag?('File')}.each do |header|
@@ -695,19 +714,6 @@ rm -rf #{@scratch_dir} || exit 1
     else
       puts "All checks \e[32mPASSED\e[0m"
     end
-  end
-  def builder_selector(base_dir, shown_pattern=nil)
-    selector = {}
-    Dir[base_dir].sort.select{|dir| File.directory?(dir)}.each do |dir|
-      key = if shown_pattern
-              dir.gsub(shown_pattern.keys.first,shown_pattern)
-            else
-              dir
-            end
-      value = File.basename(dir)
-      selector[key] = value
-    end
-    selector
   end
 end
 
