@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140315-205833'
+# Version = '20140315-210244'
 
 require 'sushi_fabric'
 
@@ -25,7 +25,9 @@ if File.exist?('lib')
   $: << 'lib'
 end
 if opt.load_path
-  $: << opt.load_path
+  opt.load_path.split(':').each do |path|
+    $: << path
+  end
 end
 
 unless opt.class_name
