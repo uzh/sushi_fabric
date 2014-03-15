@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+# Version = '20140315-204415'
+
+require 'sushi_fabric'
+
+opt = OptionParser.new do |o|
+  o.banner = <<-EOT
+Usage: 
+  #{File.basename(__FILE__)} --class [SushiApp class] [options]
+  \t(Either --dataset_id or --dataset_tsv is \e[31mrequired\e[0m)
+  EOT
+  o.on(:class_name, '-c class_name', '--class', "SushiApp class name (\e[31mrequired\e[0m)")
+  o.on(:dataset_id, '-i dataset_id', '--dataset_id', Integer, 'DataSet ID in Sushi DB')
+  o.on(:dataset_tsv, '-d dataset_tsv', '--dataset', String, 'DataSet file (.tsv) (This option is prior to dataset_id option)')
+  o.on(:parameterset_tsv, '-m parameterset_tsv', '--parameterset', String, 'Parameterset file (.tsv)')
+  o.on(:run_mode, '-r', '--run', 'Real run mode. without this option, it runs with test run mode which checks only DataSet and Parameters and no submittion')
+  o.on(:project, '1001', '-p', '--project', String, 'Project Number (default: 1001)')
+  o.on(:user, 'sushi_lover', '-u', '--user', String, 'Submit user (default: sushi_lover)')
+  o.on(:load_path, '-I load_path', '--load_path', 'Add path where SushiApp class is located (default: ./lib)')
+  o.parse!(ARGV)
+end
+opt.project = 'p' + opt.project
+if File.exist?('lib')
+  $: << 'lib'
+end
+if opt.load_path
+  $: << opt.load_path
+end
+
+unless opt.class_name
+  puts
+  warn "\e[31mERROR\e[0m: --class is required"
+  puts
+  warn opt.help
+  exit
+end
+unless opt.dataset_id or opt.dataset_tsv
+  puts
+  warn "\e[31mERROR\e[0m: Either --dataset_id or --dataset_tsv is required"
+  puts
+  print opt.help
+  exit
+end
+
+begin
+  require opt.class_name
+  klass = eval(opt.class_name)
+  usecase = klass.new
+rescue NameError # uninitialized constant
+  warn ""
+  warn "\e[31mERROR\e[0m: The class #{opt.class_name} cannot be loaded. Add path with -I option."
+  warn "" 
+  warn "Current library load path(s):"
+  puts $:.map{|dir| "\t"+dir}
+end
+
+usecase.project = opt.project
+usecase.user = opt.user
+usecase.dataset_sushi_id = opt.dataset_id
+usecase.dataset_tsv_file = opt.dataset_tsv
+usecase.parameterset_tsv_file = opt.parameterset_tsv
+if opt.run_mode
+  usecase.run
+else
+  usecase.test_run
+end
+
