@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140313-161006'
+# Version = '20140314-104422'
 
 require 'csv'
 require 'fileutils'
@@ -62,6 +62,7 @@ end
     require "#{SUSHI_APP_DIR}/app/models/project"
     require "#{SUSHI_APP_DIR}/app/models/data_set"
     require "#{SUSHI_APP_DIR}/app/models/sample"
+    require "#{SUSHI_APP_DIR}/app/models/job"
   else
     NO_ROR = true
   end
@@ -258,7 +259,7 @@ class SushiApp
       parameterset_tsv.each do |row|
         header, value = row
         headers << header
-        @params[header] = if @params.data_type(header) == String
+        @params[header] = if @params.data_type(header) == String or value == nil
                             value
                           else
                             eval(value)
@@ -542,10 +543,26 @@ rm -rf #{@scratch_dir} || exit 1
       end
       unless NO_ROR
         @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows)
+
+        # save job and dataset relation in Sushi DB
+        job_ids.each do |job_id|
+          new_job = Job.new
+          new_job.submit_job_id = job_id.to_i
+          new_job.next_dataset_id = @next_dataset_id
+          new_job.save
+          new_job.data_set.jobs << new_job
+          new_job.data_set.save
+        end
+
       end
     end
-    Thread.new do
+    t = Thread.new do
       copy_dataset_parameter_jobscripts
+    end
+    if Thread.main == Thread.current # in case of running script directly on terminal
+      warn "copy dataset, parameter, jobscripts..."
+      t.join
+      warn "copy finish."
     end
   end
   def test_run
