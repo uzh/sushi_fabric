@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140314-104422'
+# Version = '20140317-133809'
 
 require 'csv'
 require 'fileutils'
@@ -194,14 +194,18 @@ class SushiApp
     if @dataset_tsv_file
       dataset_tsv = CSV.readlines(@dataset_tsv_file, {:headers=>true, :col_sep=>"\t"})
       @dataset_hash = []
+      @dataset = []
       dataset_tsv.each do |row|
         @dataset_hash << row.to_hash
+        @dataset << row.to_hash
       end
     elsif @dataset_sushi_id
       @dataset_hash = []
+      @dataset = []
       if dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
         dataset.samples.each do |sample|
           @dataset_hash << sample.to_hash
+          @dataset << sample.to_hash
         end
       end
     end
