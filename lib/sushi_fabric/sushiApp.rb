@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140317-133809'
+# Version = '20140411-084254'
 
 require 'csv'
 require 'fileutils'
@@ -12,9 +12,10 @@ require 'rails/all'
 module SushiFabric
   class Application < Rails::Application
     # default parameters
+    default_root = Rails.root||Dir.pwd
     config.workflow_manager = 'druby://localhost:12345'
-    config.gstore_dir = File.join(Dir.pwd, 'public/gstore/projects')
-    config.sushi_app_dir = Dir.pwd
+    config.gstore_dir = File.join(default_root, 'public/gstore/projects')
+    config.sushi_app_dir = default_root
     config.scratch_dir = '/tmp/scratch'
   end
 
@@ -31,8 +32,8 @@ module SushiFabric
   class Application < Rails::Application
     # default parameters
     config.workflow_manager = 'druby://localhost:12345'
-    config.gstore_dir = File.join(Dir.pwd, 'public/gstore/projects')
-    config.sushi_app_dir = Dir.pwd
+    config.gstore_dir = File.join(#{default_root}, 'public/gstore/projects')
+    config.sushi_app_dir = #{default_root}
     config.scratch_dir = '/tmp/scratch'
   end
 end
