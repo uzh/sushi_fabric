@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140411-084254'
+# Version = '20140523-144630'
 
 require 'csv'
 require 'fileutils'
@@ -242,7 +242,9 @@ class SushiApp
       @output_files ||= []
       @output_files << header
     end
-    @output_files = @output_files.uniq
+    if @output_files
+      @output_files = @output_files.uniq
+    end
   end
   def check_required_columns
     if @dataset_hash and @required_columns and (@required_columns-@dataset_hash.map{|row| row.keys}.flatten.uniq.map{|colname| colname.gsub(/\[.+\]/,'').strip}).empty?
