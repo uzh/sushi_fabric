@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140612-160324'
+# Version = '20140612-161744'
 
 require 'csv'
 require 'fileutils'
@@ -767,7 +767,9 @@ rm -rf #{@scratch_dir} || exit 1
 
     if failures > 0
       puts
-      puts "\e[31mFailures (#{failures})\e[0m: All failures should be solved"
+      err_msg = "\e[31mFailures (#{failures})\e[0m: All failures should be solved"
+      puts err_msg
+      err_msgs.concat([err_msg])
       raise "\n"+err_msgs.join("\n")+"\n\n"
     else
       puts "All checks \e[32mPASSED\e[0m"
