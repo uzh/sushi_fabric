@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140523-144630'
+# Version = '20140612-155612'
 
 require 'csv'
 require 'fileutils'
@@ -580,12 +580,16 @@ rm -rf #{@scratch_dir} || exit 1
     set_user_parameters
 
     failures = 0
+    err_msgs = []
     print 'check project name: '
     unless @project
-      puts "\e[31mFAILURE\e[0m: project number is required but not found. you should set it in usecase."
-      puts "\tex.)"
-      puts "\tapp = #{self.class}.new"
-      puts "\tapp.project = 'p1001'"
+      err_msg = []
+      err_msg << "\e[31mFAILURE\e[0m: project number is required but not found. you should set it in usecase."
+      err_msg << "\tex.)"
+      err_msg << "\tapp = #{self.class}.new"
+      err_msg << "\tapp.project = 'p1001'"
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:\n\t@project=#{@project}"
@@ -593,23 +597,29 @@ rm -rf #{@scratch_dir} || exit 1
 
     print 'check user name: '
     unless @user
-      puts "\e[31mWARNING\e[0m: user number is ought to be added but not found. you should set it in usecase. Default will be 'sushi lover'"
-      puts "\tex.)"
-      puts "\tapp = #{self.class}.new"
-      puts "\tapp.user = 'masa'"
+      err_msg = []
+      err_msg << "\e[31mWARNING\e[0m: user number is ought to be added but not found. you should set it in usecase. Default will be 'sushi lover'"
+      err_msg << "\tex.)"
+      err_msg << "\tapp = #{self.class}.new"
+      err_msg << "\tapp.user = 'masa'"
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
     else
       puts "\e[32mPASSED\e[0m:\n\t@user=#{@user}"
     end
 
     print 'check application name: '
     if @name.to_s.empty?
-      puts "\e[31mFAILURE\e[0m: application name is required but not found. you should set it in application class."
-      puts "\tex.)"
-      puts "\tclass #{self.class}"
-      puts "\t def initialize"
-      puts "\t  @name = '#{self.class}'"
-      puts "\t end"
-      puts "\tend"
+      err_msg = []
+      err_msg << "\e[31mFAILURE\e[0m: application name is required but not found. you should set it in application class."
+      err_msg << "\tex.)"
+      err_msg << "\tclass #{self.class}"
+      err_msg << "\t def initialize"
+      err_msg << "\t  @name = '#{self.class}'"
+      err_msg << "\t end"
+      err_msg << "\tend"
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:\n\t@name=#{@name}"
@@ -617,13 +627,16 @@ rm -rf #{@scratch_dir} || exit 1
 
     print 'check analysis_category: '
     if @analysis_category.to_s.empty?
-      puts "\e[31mFAILURE\e[0m: analysis_category is required but not found. you should set it in application class."
-      puts "\tex.)"
-      puts "\tclass #{self.class}"
-      puts "\t def initialize"
-      puts "\t  @analysis_category = 'Mapping'"
-      puts "\t end"
-      puts "\tend"
+      err_msg = []
+      err_msg << "\e[31mFAILURE\e[0m: analysis_category is required but not found. you should set it in application class."
+      err_msg << "\tex.)"
+      err_msg << "\tclass #{self.class}"
+      err_msg << "\t def initialize"
+      err_msg << "\t  @analysis_category = 'Mapping'"
+      err_msg << "\t end"
+      err_msg << "\tend"
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:\n\t@analysis_category=#{@analysis_category}"
@@ -631,10 +644,13 @@ rm -rf #{@scratch_dir} || exit 1
 
     print 'check dataset: '
     if !@dataset_hash or @dataset_hash.empty?
-      puts "\e[31mFAILURE\e[0m: dataset is not found. you should set it by using #{self.class}#dataset_sushi_id or #{self.class}#dataset_tsv_file properties"
-      puts "\tex.)"
-      puts "\tusecase = #{self.class}.new"
-      puts "\tusecase.dataset_tsv_file = \"dataset.tsv\""
+      err_msg = []
+      err_msg << "\e[31mFAILURE\e[0m: dataset is not found. you should set it by using #{self.class}#dataset_sushi_id or #{self.class}#dataset_tsv_file properties"
+      err_msg << "\tex.)"
+      err_msg << "\tusecase = #{self.class}.new"
+      err_msg << "\tusecase.dataset_tsv_file = \"dataset.tsv\""
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:\n\t@dataset_hash.length = #{@dataset_hash.length}"
@@ -642,11 +658,13 @@ rm -rf #{@scratch_dir} || exit 1
 
     print 'check required columns: '
     unless check_required_columns
-      puts "\e[31mFAILURE\e[0m: required_column(s) is not found in dataset. you should set it in application class."
-      puts "\tex.)"
-      puts "\tdef initialize"
-      puts "\t  @required_columns = ['Name', 'Read1']"
-      puts
+      err_msg = []
+      err_msg << "\e[31mFAILURE\e[0m: required_column(s) is not found in dataset. you should set it in application class."
+      err_msg << "\tex.)"
+      err_msg << "\tdef initialize"
+      err_msg << "\t  @required_columns = ['Name', 'Read1']"
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:"
@@ -656,16 +674,18 @@ rm -rf #{@scratch_dir} || exit 1
 
     print 'check required parameters: '
     unless check_application_parameters
-      puts "\e[31mFAILURE\e[0m: required_param(s) is not set yet. you should set it in usecase"
-      puts "\tmissing params: #{@required_params-@params.keys}" if @required_params
-      puts "\tex.)"
-      puts "\tusecase = #{self.class}.new"
+      err_msg = []
+      err_msg << "\e[31mFAILURE\e[0m: required_param(s) is not set yet. you should set it in usecase"
+      err_msg << "\tmissing params: #{@required_params-@params.keys}" if @required_params
+      err_msg << "\tex.)"
+      err_msg << "\tusecase = #{self.class}.new"
       if @required_params
-        puts "\tusecase.params['#{(@required_params-@params.keys)[0]}'] = parameter"
+        err_msg << "\tusecase.params['#{(@required_params-@params.keys)[0]}'] = parameter"
       else
-        puts "\tusecase.params['parameter name'] = default_parameter"
+        err_msg << "\tusecase.params['parameter name'] = default_parameter"
       end
-      puts
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:"
@@ -676,8 +696,11 @@ rm -rf #{@scratch_dir} || exit 1
     print 'check next dataset: '
     @dataset={}
     unless self.next_dataset
-      puts "\e[31mFAILURE\e[0m: next dataset is not set yet. you should overwrite SushiApp#next_dataset method in #{self.class}"
-      puts "\tnote: the return value should be Hash (key: column title, value: value in a tsv table)"
+      err_msg = []
+      err_msg << "\e[31mFAILURE\e[0m: next dataset is not set yet. you should overwrite SushiApp#next_dataset method in #{self.class}"
+      err_msg << "\tnote: the return value should be Hash (key: column title, value: value in a tsv table)"
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:"
@@ -685,10 +708,13 @@ rm -rf #{@scratch_dir} || exit 1
 
     print 'check output files: '
     if !@output_files or @output_files.empty?
-      puts "\e[31mWARNING\e[0m: no output files. you will not get any output files after the job running. you can set @output_files (array) in #{self.class}"
-      puts "\tnote: usually it should be define in initialize method"
-      puts "\t      the elements of @output_files should be chosen from #{self.class}#next_dataset.keys"
-      puts "\t      #{self.class}#next_dataset.keys: #{self.next_dataset.keys}" if self.next_dataset
+      err_msg = []
+      err_msg << "\e[31mWARNING\e[0m: no output files. you will not get any output files after the job running. you can set @output_files (array) in #{self.class}"
+      err_msg << "\tnote: usually it should be define in initialize method"
+      err_msg << "\t      the elements of @output_files should be chosen from #{self.class}#next_dataset.keys"
+      err_msg << "\t      #{self.class}#next_dataset.keys: #{self.next_dataset.keys}" if self.next_dataset
+      puts err_msg.join("\n")
+      err_msgs.concat(err_msg)
     else
       puts "\e[32mPASSED\e[0m:"
     end
@@ -698,8 +724,11 @@ rm -rf #{@scratch_dir} || exit 1
       @dataset_hash.each do |row|
         @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
         unless com = commands
-          puts "\e[31mFAILURE\e[0m: any commands is not defined yet. you should overwrite SushiApp#commands method in #{self.class}"
-          puts "\tnote: the return value should be String (this will be in the main body of submitted job script)"
+          err_msg = []
+          err_msg << "\e[31mFAILURE\e[0m: any commands is not defined yet. you should overwrite SushiApp#commands method in #{self.class}"
+          err_msg << "\tnote: the return value should be String (this will be in the main body of submitted job script)"
+          puts err_msg.join("\n")
+          err_msgs.concat(err_msg)
           failures += 1
         else
           puts "\e[32mPASSED\e[0m:"
@@ -709,8 +738,11 @@ rm -rf #{@scratch_dir} || exit 1
       end
     elsif @params['process_mode'] == 'DATASET'
       unless com = commands
-        puts "\e[31mFAILURE\e[0m: any commands is not defined yet. you should overwrite SushiApp#commands method in #{self.class}"
-        puts "\tnote: the return value should be String (this will be in the main body of submitted job script)"
+        err_msg = []
+        err_msg << "\e[31mFAILURE\e[0m: any commands is not defined yet. you should overwrite SushiApp#commands method in #{self.class}"
+        err_msg << "\tnote: the return value should be String (this will be in the main body of submitted job script)"
+        puts err_msg.join("\n")
+        err_msgs.concat(err_msg)
         failures += 1
       else
         puts "\e[32mPASSED\e[0m:"
@@ -725,7 +757,9 @@ rm -rf #{@scratch_dir} || exit 1
     rescue
     end
     unless hello =~ /hello/
-      puts "\e[31mFAILURE\e[0m: workflow_manager does not reply. check if workflow_manager is working"
+      err_msg = "\e[31mFAILURE\e[0m: workflow_manager does not reply. check if workflow_manager is working"
+      puts err_msg
+      err_msgs.concat([err_msg])
       failures += 1
     else
       puts "\e[32mPASSED\e[0m:"
@@ -734,7 +768,7 @@ rm -rf #{@scratch_dir} || exit 1
     if failures > 0
       puts
       puts "\e[31mFailures (#{failures})\e[0m: All failures should be solved"
-      raise "test run fails"
+      raise err_msgs.join("\n")+"\n"
     else
       puts "All checks \e[32mPASSED\e[0m"
     end
