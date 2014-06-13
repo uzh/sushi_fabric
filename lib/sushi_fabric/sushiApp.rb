@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140612-161952'
+# Version = '20140613-165327'
 
 require 'csv'
 require 'fileutils'
@@ -412,8 +412,19 @@ rm -rf #{@scratch_dir} || exit 1
   def copy_commands(org_dir, dest_parent_dir)
     @workflow_manager.copy_commands(org_dir, dest_parent_dir)
   end
-  def copy_dataset_parameter_jobscripts
+  def copy_inputdataset_parameter_jobscripts
     org = @scratch_result_dir
+    dest = @gstore_project_dir
+    copy_commands(org, dest).each do |command|
+      puts command
+      unless system command
+        raise "fails in copying input_dataset, parameters and jobscript files from /scratch to /gstore"
+      end
+    end
+    sleep 1
+  end
+  def copy_nextdataset
+    org = @next_dataset_tsv_path
     dest = @gstore_project_dir
     copy_commands(org, dest).each do |command|
       puts command
@@ -425,6 +436,7 @@ rm -rf #{@scratch_dir} || exit 1
     command = "rm -rf #{@scratch_result_dir}"
     `#{command}`
   end
+
   def make_job_script
     @out = open(@job_script, 'w')
     job_header
@@ -500,74 +512,75 @@ rm -rf #{@scratch_dir} || exit 1
     save_parameters_as_tsv
     save_input_dataset_as_tsv
 
-
-    ## sushi writes creates the job scripts and builds the result data set that is to be generated
-    @result_dataset = []
-    @job_scripts = []
-    if @params['process_mode'] == 'SAMPLE'
-      sample_mode
-    elsif @params['process_mode'] == 'DATASET'
-      dataset_mode
-    else 
-      #stop
-      warn "the process mode (#{@params['process_mode']}) is not defined"
-      raise "stop job submitting"
-    end
-
-    # job submittion
-    @job_scripts.each_with_index do |job_script, i|
-      job_id = submit(job_script)
-      @job_ids << job_id
-      print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
-    end
-
-		puts
-    print 'job scripts: '
-    p @job_scripts
-    print 'result dataset: '
-    p @result_dataset
-
-    # copy application data to gstore 
-    next_dataset_tsv_path = save_next_dataset_as_tsv
-
-    if !@job_ids.empty? and @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-      data_set_arr = []
-      headers = []
-      rows = []
-      next_dataset_name = if name = @next_dataset_name
-                            name.to_s
-                          else
-                            "#{@analysis_category}_#{@name.gsub(/\s/,'').gsub(/_/,'')}_#{dataset.id}"
-                          end
-      data_set_arr = {'DataSetName'=>next_dataset_name, 'ProjectNumber'=>@project.gsub(/p/,''), 'ParentID'=>@dataset_sushi_id, 'Comment'=>@next_dataset_comment.to_s}
-      csv = CSV.readlines(next_dataset_tsv_path, :col_sep=>"\t")
-      csv.each do |row|
-        if headers.empty?
-          headers = row
-        else
-          rows << row
-        end
-      end
-      unless NO_ROR
-        @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows)
-
-        # save job and dataset relation in Sushi DB
-        job_ids.each do |job_id|
-          new_job = Job.new
-          new_job.submit_job_id = job_id.to_i
-          new_job.next_dataset_id = @next_dataset_id
-          new_job.save
-          new_job.data_set.jobs << new_job
-          new_job.data_set.save
-        end
-
-      end
-    end
     t = Thread.new do
-      copy_dataset_parameter_jobscripts
+      copy_inputdataset_parameter_jobscripts
+
+      ## sushi writes creates the job scripts and builds the result data set that is to be generated
+      @result_dataset = []
+      @job_scripts = []
+      if @params['process_mode'] == 'SAMPLE'
+        sample_mode
+      elsif @params['process_mode'] == 'DATASET'
+        dataset_mode
+      else 
+        #stop
+        warn "the process mode (#{@params['process_mode']}) is not defined"
+        raise "stop job submitting"
+      end
+
+      # job submittion
+      @job_scripts.each_with_index do |job_script, i|
+        job_id = submit(job_script)
+        @job_ids << job_id
+        print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
+      end
+
+          puts
+      print 'job scripts: '
+      p @job_scripts
+      print 'result dataset: '
+      p @result_dataset
+
+      # copy application data to gstore 
+      @next_dataset_tsv_path = save_next_dataset_as_tsv
+
+      if !@job_ids.empty? and @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+        data_set_arr = []
+        headers = []
+        rows = []
+        next_dataset_name = if name = @next_dataset_name
+                              name.to_s
+                            else
+                              "#{@analysis_category}_#{@name.gsub(/\s/,'').gsub(/_/,'')}_#{dataset.id}"
+                            end
+        data_set_arr = {'DataSetName'=>next_dataset_name, 'ProjectNumber'=>@project.gsub(/p/,''), 'ParentID'=>@dataset_sushi_id, 'Comment'=>@next_dataset_comment.to_s}
+        csv = CSV.readlines(@next_dataset_tsv_path, :col_sep=>"\t")
+        csv.each do |row|
+          if headers.empty?
+            headers = row
+          else
+            rows << row
+          end
+        end
+        unless NO_ROR
+          @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows)
+
+          # save job and dataset relation in Sushi DB
+          job_ids.each do |job_id|
+            new_job = Job.new
+            new_job.submit_job_id = job_id.to_i
+            new_job.next_dataset_id = @next_dataset_id
+            new_job.save
+            new_job.data_set.jobs << new_job
+            new_job.data_set.save
+          end
+
+        end
+      end
+      copy_nextdataset
     end
     if Thread.main == Thread.current # in case of running script directly on terminal
-      warn "copy dataset, parameter, jobscripts..."
+      warn "copy next dataset..."
       t.join
       warn "copy finish."
     end
