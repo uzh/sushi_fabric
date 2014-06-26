@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140613-165327'
+# Version = '20140626-133635'
 
 require 'csv'
 require 'fileutils'
@@ -284,13 +284,13 @@ class SushiApp
       raise "should set #name and #project"
     end
     @name.gsub!(/\s/,'_')
-    result_dir_base = if @next_dataset_name
+    @result_dir_base = if @next_dataset_name
                         [@next_dataset_name, Time.now.strftime("%Y-%m-%d--%H-%M-%S")].join("_")
                       else
                         [@analysis_category, @name, @dataset_sushi_id.to_s, Time.now.strftime("%Y-%m-%d--%H-%M-%S")].join("_")
                       end
-    @result_dir = File.join(@project, result_dir_base)
-    @scratch_result_dir = File.join(SCRATCH_DIR, result_dir_base)
+    @result_dir = File.join(@project, @result_dir_base)
+    @scratch_result_dir = File.join(SCRATCH_DIR, @result_dir_base)
     @job_script_dir = File.join(@scratch_result_dir, 'scripts')
     @gstore_result_dir = File.join(@gstore_dir, @result_dir)
     @gstore_script_dir = File.join(@gstore_result_dir, 'scripts')
@@ -425,7 +425,7 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def copy_nextdataset
     org = @next_dataset_tsv_path
-    dest = @gstore_project_dir
+    dest = File.join(@gstore_project_dir, @result_dir_base)
     copy_commands(org, dest).each do |command|
       puts command
       unless system command
