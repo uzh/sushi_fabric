@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140626-133635'
+# Version = '20140701-154826'
 
 require 'csv'
 require 'fileutils'
@@ -513,7 +513,6 @@ rm -rf #{@scratch_dir} || exit 1
     save_input_dataset_as_tsv
 
     t = Thread.new do
-      copy_inputdataset_parameter_jobscripts
 
       ## sushi writes creates the job scripts and builds the result data set that is to be generated
       @result_dataset = []
@@ -527,6 +526,7 @@ rm -rf #{@scratch_dir} || exit 1
         warn "the process mode (#{@params['process_mode']}) is not defined"
         raise "stop job submitting"
       end
+      copy_inputdataset_parameter_jobscripts
 
       # job submittion
       @job_scripts.each_with_index do |job_script, i|
@@ -535,7 +535,7 @@ rm -rf #{@scratch_dir} || exit 1
         print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
       end
 
-          puts
+      puts
       print 'job scripts: '
       p @job_scripts
       print 'result dataset: '
