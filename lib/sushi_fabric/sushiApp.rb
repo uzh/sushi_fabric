@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140925-154010'
+# Version = '20140926-085517'
 
 require 'csv'
 require 'fileutils'
@@ -472,11 +472,12 @@ rm -rf #{@scratch_dir} || exit 1
     @result_dataset << next_dataset
   end
   def save_data_set(data_set_arr, headers, rows, user)
-    SushiFabric.save_data_set(data_set_arr, headers, rows, user)
-=begin
+    #SushiFabric.save_data_set(data_set_arr, headers, rows, user)
+#=begin
     data_set_hash = Hash[*data_set_arr]
     if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
       data_set = DataSet.new
+      data_set.user = user
       data_set.name = data_set_hash['DataSetName']
       data_set.project = project
       if parent_id = data_set_hash['ParentID'] and parent_data_set = DataSet.find_by_id(parent_id.to_i)
@@ -505,7 +506,7 @@ rm -rf #{@scratch_dir} || exit 1
       end
       data_set.id
     end
-=end
+#=end
   end
   def run
     test_run
