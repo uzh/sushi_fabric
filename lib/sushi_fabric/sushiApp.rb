@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20140926-085517'
+# Version = '20141009-103900'
 
 require 'csv'
 require 'fileutils'
@@ -125,11 +125,11 @@ class ::String
     scan(/\[(.*)\]/).flatten.join =~ /#{tag}/
   end
 end
-def save_data_set(data_set_arr, headers, rows, user)
+def save_data_set(data_set_arr, headers, rows)
   data_set_hash = Hash[*data_set_arr]
   if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
     data_set = DataSet.new
-    data_set.user = user
+    #data_set.user = user
     data_set.name = data_set_hash['DataSetName']
     data_set.project = project
     if parent_id = data_set_hash['ParentID'] and parent_data_set = DataSet.find_by_id(parent_id.to_i)
@@ -159,7 +159,7 @@ def save_data_set(data_set_arr, headers, rows, user)
     data_set.id
   end
 end
-module_function :save_data_set
+#module_function :save_data_set
 
 class SushiApp
   attr_reader :params
@@ -471,13 +471,13 @@ rm -rf #{@scratch_dir} || exit 1
     @job_scripts << @job_script
     @result_dataset << next_dataset
   end
-  def save_data_set(data_set_arr, headers, rows, user)
+  def save_data_set(data_set_arr, headers, rows)
     #SushiFabric.save_data_set(data_set_arr, headers, rows, user)
 #=begin
     data_set_hash = Hash[*data_set_arr]
     if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
       data_set = DataSet.new
-      data_set.user = user
+      #data_set.user = user
       data_set.name = data_set_hash['DataSetName']
       data_set.project = project
       if parent_id = data_set_hash['ParentID'] and parent_data_set = DataSet.find_by_id(parent_id.to_i)
@@ -569,7 +569,8 @@ rm -rf #{@scratch_dir} || exit 1
           end
         end
         unless NO_ROR
-          @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, current_user)
+          #@next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, current_user)
+          @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows)
 
           # save job and dataset relation in Sushi DB
           job_ids.each do |job_id|
