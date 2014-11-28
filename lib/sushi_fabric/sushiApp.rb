@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20141009-135300'
+# Version = '20141128-165440'
 
 require 'csv'
 require 'fileutils'
@@ -411,13 +411,13 @@ rm -rf #{@scratch_dir} || exit 1
     end
     file_path
   end
-  def copy_commands(org_dir, dest_parent_dir)
-    @workflow_manager.copy_commands(org_dir, dest_parent_dir)
+  def copy_commands(org_dir, dest_parent_dir, now=nil)
+    @workflow_manager.copy_commands(org_dir, dest_parent_dir, now)
   end
   def copy_inputdataset_parameter_jobscripts
     org = @scratch_result_dir
     dest = @gstore_project_dir
-    copy_commands(org, dest).each do |command|
+    copy_commands(org, dest, 'now').each do |command|
       puts command
       unless system command
         raise "fails in copying input_dataset, parameters and jobscript files from /scratch to /gstore"
@@ -428,7 +428,7 @@ rm -rf #{@scratch_dir} || exit 1
   def copy_nextdataset
     org = @next_dataset_tsv_path
     dest = File.join(@gstore_project_dir, @result_dir_base)
-    copy_commands(org, dest).each do |command|
+    copy_commands(org, dest, 'now').each do |command|
       puts command
       unless system command
         raise "fails in copying next_dataset files from /scratch to /gstore"
