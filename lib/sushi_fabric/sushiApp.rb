@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20141202-094548'
+# Version = '20141202-095124'
 
 require 'csv'
 require 'fileutils'
@@ -423,7 +423,7 @@ rm -rf #{@scratch_dir} || exit 1
         raise "fails in copying input_dataset, parameters and jobscript files from /scratch to /gstore"
       end
     end
-    sleep 1
+    #sleep 1
   end
   def copy_nextdataset
     org = @next_dataset_tsv_path
