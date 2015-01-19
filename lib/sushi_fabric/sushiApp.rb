@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20141202-095124'
+# Version = '20150119-164636'
 
 require 'csv'
 require 'fileutils'
@@ -335,7 +335,7 @@ cd $SCRATCH_DIR || exit 1
       end
     end
     @out.print <<-EOF
-cd ~
+cd #{SCRATCH_DIR}
 rm -rf #{@scratch_dir} || exit 1
     EOF
 
