@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20141222-172420'
+# Version = '20150326-155111'
 
 require 'sushi_fabric'
 
@@ -15,8 +15,8 @@ Usage:
   o.on(:dataset_tsv, '-d dataset_tsv', '--dataset', String, 'DataSet file (.tsv) (This option is prior to dataset_id option)')
   o.on(:parameterset_tsv, '-m parameterset_tsv', '--parameterset', String, 'Parameterset file (.tsv)')
   o.on(:run_mode, '-r', '--run', 'Real run mode. without this option, it runs with test run mode which checks only DataSet and Parameters and no submittion')
-  o.on(:project, '1001', '-p', '--project', String, 'Project Number (default: 1001)')
-  o.on(:user, 'sushi_lover', '-u', '--user', String, 'Submit user (default: sushi_lover)')
+  o.on(:project, '1001', '-p project', '--project', String, 'Project Number (default: 1001)')
+  o.on(:user, 'sushi_lover', '-u user', '--user', String, 'Submit user (default: sushi_lover)')
   o.on(:load_path, '-I load_path', '--load_path', 'Add path where SushiApp class is located (default: ./lib)')
   o.on(:next_dataset_name, '-n next_dataset_name', '--next_dataset_name', 'Next DataSet Name (default: Analysis_Category+ID+Date )')
   o.parse!(ARGV)
