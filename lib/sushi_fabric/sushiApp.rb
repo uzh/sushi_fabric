@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150119-164636'
+# Version = '20150326-142037'
 
 require 'csv'
 require 'fileutils'
@@ -20,7 +20,7 @@ module SushiFabric
   end
 
   # load custmized parameters if there is
-  mode = ENV['RAILS_ENV']||'development'
+  mode = ENV['RAILS_ENV']||'production'
   config_file = File.join('./config/environments', mode)
   if File.exist?(config_file + '.rb')
     require config_file
@@ -58,7 +58,7 @@ end
     NO_ROR = false
     ActiveRecord::Base.establish_connection(
                 :adapter  => 'sqlite3',
-                :database => "#{SUSHI_APP_DIR}/db/development.sqlite3" 
+                :database => "#{SUSHI_APP_DIR}/db/#{mode}.sqlite3" 
             )
     require "#{SUSHI_APP_DIR}/app/models/project"
     require "#{SUSHI_APP_DIR}/app/models/data_set"
