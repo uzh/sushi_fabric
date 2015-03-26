@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150326-142037'
+# Version = '20150326-150304'
 
 require 'csv'
 require 'fileutils'
@@ -201,6 +201,23 @@ class SushiApp
       dataset_tsv.each do |row|
         @dataset_hash << row.to_hash
         @dataset << row.to_hash
+      end
+
+      # save in sushi db
+      data_set_arr = []
+      headers = []
+      rows = []
+      data_set_arr = {'DataSetName'=>File.basename(@dataset_tsv_file).gsub(/.tsv/, ''), 'ProjectNumber'=>@project.gsub(/p/,'')}
+      csv = CSV.readlines(@dataset_tsv_file, :col_sep=>"\t")
+      csv.each do |row|
+        if headers.empty?
+          headers = row
+        else
+          rows << row
+        end
+      end
+      unless NO_ROR
+        @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows)
       end
     elsif @dataset_sushi_id
       @dataset_hash = []
