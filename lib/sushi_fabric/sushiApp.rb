@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150326-150304'
+# Version = '20150327-011855'
 
 require 'csv'
 require 'fileutils'
@@ -178,6 +178,7 @@ class SushiApp
   attr_accessor :project
   attr_accessor :user
   attr_accessor :next_dataset_name
+  attr_accessor :dataset_name
   attr_accessor :next_dataset_comment
   def initialize
     @gstore_dir = GSTORE_DIR
@@ -203,11 +204,16 @@ class SushiApp
         @dataset << row.to_hash
       end
 
-      # save in sushi db
+      # save in sushi db unless it is saved in sushi db
       data_set_arr = []
       headers = []
       rows = []
-      data_set_arr = {'DataSetName'=>File.basename(@dataset_tsv_file).gsub(/.tsv/, ''), 'ProjectNumber'=>@project.gsub(/p/,'')}
+      dataset_name = if @dataset_name
+                       @dataset_name
+                     else
+                       File.basename(@dataset_tsv_file).gsub(/.tsv/, '')
+                     end
+      data_set_arr = {'DataSetName'=>dataset_name, 'ProjectNumber'=>@project.gsub(/p/,'')}
       csv = CSV.readlines(@dataset_tsv_file, :col_sep=>"\t")
       csv.each do |row|
         if headers.empty?
