@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150327-011855'
+# Version = '20150402-160852'
 
 require 'csv'
 require 'fileutils'
@@ -620,8 +620,8 @@ rm -rf #{@scratch_dir} || exit 1
 #    end
   end
   def test_run
-    set_dir_paths
     set_input_dataset
+    set_dir_paths
     preprocess
     set_output_files
     set_user_parameters
