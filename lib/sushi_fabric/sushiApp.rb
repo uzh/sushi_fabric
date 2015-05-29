@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150402-160852'
+# Version = '20150529-100405'
 
 require 'csv'
 require 'fileutils'
@@ -127,6 +127,11 @@ class ::String
 end
 def save_data_set(data_set_arr, headers, rows)
   data_set_hash = Hash[*data_set_arr]
+  unless project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
+    project = Project.new
+    project.number = data_set_hash['ProjectNumber'].to_i
+    project.save
+  end
   if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
     data_set = DataSet.new
     #data_set.user = user
@@ -498,6 +503,11 @@ rm -rf #{@scratch_dir} || exit 1
     #SushiFabric.save_data_set(data_set_arr, headers, rows, user)
 #=begin
     data_set_hash = Hash[*data_set_arr]
+    unless project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
+      project = Project.new
+      project.number = data_set_hash['ProjectNumber'].to_i
+      project.save
+    end
     if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
       data_set = DataSet.new
       #data_set.user = user
