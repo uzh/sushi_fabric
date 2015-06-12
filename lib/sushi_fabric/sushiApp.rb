@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150612-105439'
+# Version = '20150612-140005'
 
 require 'csv'
 require 'fileutils'
@@ -468,6 +468,9 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def cluster_nodes
     @workflow_manager.cluster_nodes
+  end
+  def default_node
+    @workflow_manager.default_node
   end
 
   def make_job_script
