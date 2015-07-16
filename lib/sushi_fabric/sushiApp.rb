@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150612-140005'
+# Version = '20150716-155138'
 
 require 'csv'
 require 'fileutils'
@@ -185,7 +185,7 @@ class SushiApp
   attr_accessor :next_dataset_name
   attr_accessor :dataset_name
   attr_accessor :next_dataset_comment
-  def initialize
+  def initialize(workflow_manager_instance = nil)
     @gstore_dir = GSTORE_DIR
     @project = nil
     @name = nil
@@ -197,7 +197,7 @@ class SushiApp
     @params['process_mode'] = 'SAMPLE'
     @job_ids = []
     @required_columns = []
-    @workflow_manager = DRbObject.new_with_uri(WORKFLOW_MANAGER)
+    @workflow_manager = workflow_manager_instance||DRbObject.new_with_uri(WORKFLOW_MANAGER)
   end
   def set_input_dataset
     if @dataset_tsv_file
@@ -384,13 +384,14 @@ rm -rf #{@scratch_dir} || exit 1
     gsub_options << "-n #{@params['node']}" unless @params['node'].to_s.empty?
     gsub_options << "-r #{@params['ram']}" unless @params['ram'].to_s.empty?
     gsub_options << "-s #{@params['scratch']}" unless @params['scratch'].to_s.empty?
-    gsub_options << "-u #{@user}" if @user
     command = "wfm_monitoring --server #{WORKFLOW_MANAGER} --project #{@project.gsub(/p/,'')} --logdir #{@gstore_script_dir} #{job_script} #{gsub_options.join(' ')}"
+    puts "submit: #{command}"
+
+    project_number = @project.gsub(/p/, '')
+    @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
   end
   def submit(job_script)
-    command = submit_command(job_script)
-    puts "submit: #{command}"
-    job_id = `#{command}`
+    job_id = submit_command(job_script)
     job_id = job_id.to_i
     unless job_id.to_i > 1
       raise 'failed in job submitting'
