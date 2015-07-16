@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150716-155138'
+# Version = '20150716-160730'
 
 require 'csv'
 require 'fileutils'
@@ -185,7 +185,8 @@ class SushiApp
   attr_accessor :next_dataset_name
   attr_accessor :dataset_name
   attr_accessor :next_dataset_comment
-  def initialize(workflow_manager_instance = nil)
+  attr_accessor :workflow_manager
+  def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
     @name = nil
@@ -197,7 +198,7 @@ class SushiApp
     @params['process_mode'] = 'SAMPLE'
     @job_ids = []
     @required_columns = []
-    @workflow_manager = workflow_manager_instance||DRbObject.new_with_uri(WORKFLOW_MANAGER)
+    #@workflow_manager = workflow_manager_instance||DRbObject.new_with_uri(WORKFLOW_MANAGER)
   end
   def set_input_dataset
     if @dataset_tsv_file
@@ -388,6 +389,7 @@ rm -rf #{@scratch_dir} || exit 1
     puts "submit: #{command}"
 
     project_number = @project.gsub(/p/, '')
+    @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
     @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
   end
   def submit(job_script)
@@ -441,6 +443,7 @@ rm -rf #{@scratch_dir} || exit 1
     file_path
   end
   def copy_commands(org_dir, dest_parent_dir, now=nil)
+    @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
     @workflow_manager.copy_commands(org_dir, dest_parent_dir, now)
   end
   def copy_inputdataset_parameter_jobscripts
@@ -468,9 +471,11 @@ rm -rf #{@scratch_dir} || exit 1
     `#{command}`
   end
   def cluster_nodes
+    @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
     @workflow_manager.cluster_nodes
   end
   def default_node
+    @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
     @workflow_manager.default_node
   end
 
