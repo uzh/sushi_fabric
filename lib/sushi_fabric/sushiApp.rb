@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150716-160730'
+# Version = '20150716-161756'
 
 require 'csv'
 require 'fileutils'
@@ -390,6 +390,7 @@ rm -rf #{@scratch_dir} || exit 1
 
     project_number = @project.gsub(/p/, '')
     @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
+    script_content = File.read(job_script)
     @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
   end
   def submit(job_script)
