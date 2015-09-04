@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150716-161756'
+# Version = '20150904-094952'
 
 require 'csv'
 require 'fileutils'
@@ -64,6 +64,7 @@ end
     require "#{SUSHI_APP_DIR}/app/models/data_set"
     require "#{SUSHI_APP_DIR}/app/models/sample"
     require "#{SUSHI_APP_DIR}/app/models/job"
+    require "#{SUSHI_APP_DIR}/app/models/user"
   else
     NO_ROR = true
   end
@@ -125,7 +126,7 @@ class ::String
     scan(/\[(.*)\]/).flatten.join =~ /#{tag}/
   end
 end
-def save_data_set(data_set_arr, headers, rows)
+def save_data_set(data_set_arr, headers, rows, user=nil)
   data_set_hash = Hash[*data_set_arr]
   unless project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
     project = Project.new
@@ -134,7 +135,9 @@ def save_data_set(data_set_arr, headers, rows)
   end
   if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
     data_set = DataSet.new
-    #data_set.user = user
+    if user
+      data_set.user = user
+    end
     data_set.name = data_set_hash['DataSetName']
     data_set.project = project
     if parent_id = data_set_hash['ParentID'] and parent_data_set = DataSet.find_by_id(parent_id.to_i)
@@ -160,6 +163,10 @@ def save_data_set(data_set_arr, headers, rows)
       project.data_sets << data_set
       parent_data_set.data_sets << data_set if parent_data_set
       data_set.save
+      if user
+        user.data_sets << data_set
+        user.save
+      end
     end
     data_set.id
   end
@@ -229,7 +236,8 @@ class SushiApp
         end
       end
       unless NO_ROR
-        @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows)
+        current_user ||= nil
+        @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, current_user)
       end
     elsif @dataset_sushi_id
       @dataset_hash = []
@@ -512,9 +520,7 @@ rm -rf #{@scratch_dir} || exit 1
     @job_scripts << @job_script
     @result_dataset << next_dataset
   end
-  def save_data_set(data_set_arr, headers, rows)
-    #SushiFabric.save_data_set(data_set_arr, headers, rows, user)
-#=begin
+  def save_data_set(data_set_arr, headers, rows, user=nil)
     data_set_hash = Hash[*data_set_arr]
     unless project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
       project = Project.new
@@ -523,7 +529,9 @@ rm -rf #{@scratch_dir} || exit 1
     end
     if project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
       data_set = DataSet.new
-      #data_set.user = user
+      if user
+        data_set.user = user
+      end
       data_set.name = data_set_hash['DataSetName']
       data_set.project = project
       if parent_id = data_set_hash['ParentID'] and parent_data_set = DataSet.find_by_id(parent_id.to_i)
@@ -549,10 +557,13 @@ rm -rf #{@scratch_dir} || exit 1
         project.data_sets << data_set
         parent_data_set.data_sets << data_set if parent_data_set
         data_set.save
+        if user
+          user.data_sets << data_set
+          user.save
+        end
       end
       data_set.id
     end
-#=end
   end
   def main
     ## sushi writes creates the job scripts and builds the result data set that is to be generated
@@ -604,8 +615,8 @@ rm -rf #{@scratch_dir} || exit 1
         end
       end
       unless NO_ROR
-        #@next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, current_user)
-        @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows)
+        current_user ||= nil
+        @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, current_user)
 
         # save job and dataset relation in Sushi DB
         job_ids.each do |job_id|
