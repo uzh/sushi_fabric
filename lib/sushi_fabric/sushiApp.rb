@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150904-094952'
+# Version = '20150904-095717'
 
 require 'csv'
 require 'fileutils'
@@ -60,6 +60,7 @@ end
                 :adapter  => 'sqlite3',
                 :database => "#{SUSHI_APP_DIR}/db/#{mode}.sqlite3" 
             )
+    require 'devise'
     require "#{SUSHI_APP_DIR}/app/models/project"
     require "#{SUSHI_APP_DIR}/app/models/data_set"
     require "#{SUSHI_APP_DIR}/app/models/sample"
