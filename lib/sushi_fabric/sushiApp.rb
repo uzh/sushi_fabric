@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150904-095717'
+# Version = '20150904-134632'
 
 require 'csv'
 require 'fileutils'
@@ -60,12 +60,10 @@ end
                 :adapter  => 'sqlite3',
                 :database => "#{SUSHI_APP_DIR}/db/#{mode}.sqlite3" 
             )
-    require 'devise'
     require "#{SUSHI_APP_DIR}/app/models/project"
     require "#{SUSHI_APP_DIR}/app/models/data_set"
     require "#{SUSHI_APP_DIR}/app/models/sample"
     require "#{SUSHI_APP_DIR}/app/models/job"
-    require "#{SUSHI_APP_DIR}/app/models/user"
   else
     NO_ROR = true
   end
@@ -194,6 +192,7 @@ class SushiApp
   attr_accessor :dataset_name
   attr_accessor :next_dataset_comment
   attr_accessor :workflow_manager
+  attr_accessor :current_user
   def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
@@ -237,8 +236,8 @@ class SushiApp
         end
       end
       unless NO_ROR
-        current_user ||= nil
-        @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, current_user)
+        @current_user ||= nil
+        @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
       end
     elsif @dataset_sushi_id
       @dataset_hash = []
@@ -616,8 +615,8 @@ rm -rf #{@scratch_dir} || exit 1
         end
       end
       unless NO_ROR
-        current_user ||= nil
-        @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, current_user)
+        @current_user ||= nil
+        @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
 
         # save job and dataset relation in Sushi DB
         job_ids.each do |job_id|
