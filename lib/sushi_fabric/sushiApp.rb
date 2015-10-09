@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150904-134632'
+# Version = '20151009-135017'
 
 require 'csv'
 require 'fileutils'
 require 'yaml'
 require 'drb/drb'
-gem 'rails', '<=3.2.15'
+gem 'rails', '<=3.2.22'
 require 'rails/all'
 
 module SushiFabric
