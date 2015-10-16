@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20151009-135017'
+# Version = '20151016-160119'
 
 require 'csv'
 require 'fileutils'
@@ -54,11 +54,19 @@ end
   # check if there is a sqlite3 database of Ruby on Rails
   if defined?(::Project)
     NO_ROR = false
-  elsif File.exist?(File.join(SUSHI_APP_DIR, "app/models"))
+  elsif File.exist?(File.join(SUSHI_APP_DIR, "app/models")) and
+    database_yml = File.join(SUSHI_APP_DIR, "config/database.yml") and
+    File.exist?(database_yml)
+
     NO_ROR = false
+    
+    database_config = YAML.load(File.read(database_yml))
+    db = database_config["production"]
     ActiveRecord::Base.establish_connection(
-                :adapter  => 'sqlite3',
-                :database => "#{SUSHI_APP_DIR}/db/#{mode}.sqlite3" 
+                :adapter => db["adapter"],
+                :database => db["database"],
+                :username => db["username"],
+                :password => db["password"]
             )
     require "#{SUSHI_APP_DIR}/app/models/project"
     require "#{SUSHI_APP_DIR}/app/models/data_set"
