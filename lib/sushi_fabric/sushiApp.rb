@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20151016-160119'
+# Version = '20151029-161011'
 
 require 'csv'
 require 'fileutils'
@@ -350,9 +350,9 @@ class SushiApp
   end
   def job_header
     @scratch_dir = if @params['process_mode'] == 'SAMPLE'
-                     @scratch_result_dir + "_" + @dataset['Name']
+                     @scratch_result_dir + "_" + @dataset['Name'] + "_temp"
                    else
-                     @scratch_result_dir
+                     @scratch_result_dir + "_temp"
                    end
     @out.print <<-EOF
 #!/bin/bash
