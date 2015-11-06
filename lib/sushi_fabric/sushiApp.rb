@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20151029-161011'
+# Version = '20151106-140410'
 
 require 'csv'
 require 'fileutils'
@@ -382,6 +382,7 @@ cd $SCRATCH_DIR || exit 1
     @out.print <<-EOF
 cd #{SCRATCH_DIR}
 rm -rf #{@scratch_dir} || exit 1
+
     EOF
 
   end
@@ -496,8 +497,12 @@ rm -rf #{@scratch_dir} || exit 1
     @workflow_manager.default_node
   end
 
-  def make_job_script
-    @out = open(@job_script, 'w')
+  def make_job_script(append = false)
+    @out = if append
+             open(@job_script, 'a')
+           else
+             open(@job_script, 'w')
+           end
     job_header
     job_main
     job_footer
@@ -527,6 +532,19 @@ rm -rf #{@scratch_dir} || exit 1
     make_job_script
     @job_scripts << @job_script
     @result_dataset << next_dataset
+  end
+  def batch_mode
+    @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+                    File.join(@job_script_dir, @analysis_category + '_' + dataset.name.gsub(/\s+/,'_') + '.sh')
+                  else 
+                    File.join(@job_script_dir, @analysis_category + '_' + 'job_script.sh')
+                  end
+    @dataset_hash.each do |row|
+      @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
+      make_job_script('append')
+      @result_dataset << next_dataset
+    end
+    @job_scripts << @job_script
   end
   def save_data_set(data_set_arr, headers, rows, user=nil)
     data_set_hash = Hash[*data_set_arr]
@@ -581,6 +599,8 @@ rm -rf #{@scratch_dir} || exit 1
       sample_mode
     elsif @params['process_mode'] == 'DATASET'
       dataset_mode
+    elsif @params['process_mode'] == 'BATCH'
+      batch_mode
     else 
       #stop
       warn "the process mode (#{@params['process_mode']}) is not defined"
