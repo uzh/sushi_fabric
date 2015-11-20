@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20151106-140410'
+# Version = '20151120-070708'
 
 require 'csv'
 require 'fileutils'
@@ -201,6 +201,7 @@ class SushiApp
   attr_accessor :next_dataset_comment
   attr_accessor :workflow_manager
   attr_accessor :current_user
+  attr_accessor :logger
   def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
@@ -402,19 +403,42 @@ rm -rf #{@scratch_dir} || exit 1
     gsub_options << "-n #{@params['node']}" unless @params['node'].to_s.empty?
     gsub_options << "-r #{@params['ram']}" unless @params['ram'].to_s.empty?
     gsub_options << "-s #{@params['scratch']}" unless @params['scratch'].to_s.empty?
-    command = "wfm_monitoring --server #{WORKFLOW_MANAGER} --project #{@project.gsub(/p/,'')} --logdir #{@gstore_script_dir} #{job_script} #{gsub_options.join(' ')}"
+    command = "wfm_monitoring --server #{WORKFLOW_MANAGER} --user #{@user} --project #{@project.gsub(/p/,'')} --logdir #{@gstore_script_dir} #{job_script} #{gsub_options.join(' ')}"
     puts "submit: #{command}"
 
     project_number = @project.gsub(/p/, '')
     @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
     script_content = File.read(job_script)
-    @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
+    job_id = 0
+    begin
+      job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
+    rescue => e
+      time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
+      @logger.error("*"*50)
+      @logger.error("submit_command error #{time}")
+      @logger.error("error: #{e}")
+      @logger.error("job_script: #{job_script}, @user: #{@user}, script_content: #{script_content.class} #{script_content.to_s.length} chrs, project_number: #{project_number}, gsub_options: #{gsub_options}, job_id: #{job_id}")
+      @logger.error("*"*50)
+    end
+    job_id
   end
   def submit(job_script)
-    job_id = submit_command(job_script)
-    job_id = job_id.to_i
-    unless job_id.to_i > 1
-      raise 'failed in job submitting'
+    begin
+      job_id = submit_command(job_script)
+      job_id = job_id.to_i
+      unless job_id.to_i > 1
+        @logger.error("#"*50)
+        time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
+        @logger.error("error happened in job submitting, but maybe file. #{time}")
+        @logger.error("#"*50)
+        job_id = nil
+      end
+    rescue
+      @logger.error("@"*50)
+      time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
+      @logger.error("error happened in job submitting, but maybe file. #{time}")
+      @logger.error("@"*50)
+      job_id = nil
     end
     job_id
   end
@@ -462,7 +486,22 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def copy_commands(org_dir, dest_parent_dir, now=nil)
     @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
-    @workflow_manager.copy_commands(org_dir, dest_parent_dir, now)
+    com = ''
+    cnt_retry = 0
+    begin
+      com = @workflow_manager.copy_commands(org_dir, dest_parent_dir, now)
+    rescue => e
+      time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
+      @logger.error("*"*50)
+      @logger.error("copy_command error #{time}")
+      @logger.error("error: #{e}")
+      @logger.error("org_dir: #{org_dir}, dest_parent_dir: #{dest_parent_dir}, now: #{now}")
+      @logger.error("*"*50)
+      sleep 1
+      cnt_retry += 1
+      retry if cnt_retry < 3
+    end
+    com
   end
   def copy_inputdataset_parameter_jobscripts
     org = @scratch_result_dir
@@ -610,9 +649,10 @@ rm -rf #{@scratch_dir} || exit 1
 
     # job submittion
     @job_scripts.each_with_index do |job_script, i|
-      job_id = submit(job_script)
-      @job_ids << job_id
-      print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
+      if job_id = submit(job_script)
+        @job_ids << job_id
+        print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
+      end
     end
 
     puts
