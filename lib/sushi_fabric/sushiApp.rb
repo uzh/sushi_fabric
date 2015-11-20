@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20151120-070708'
+# Version = '20151120-105736'
 
 require 'csv'
 require 'fileutils'
@@ -429,14 +429,14 @@ rm -rf #{@scratch_dir} || exit 1
       unless job_id.to_i > 1
         @logger.error("#"*50)
         time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-        @logger.error("error happened in job submitting, but maybe file. #{time}")
+        @logger.error("error happened in job submitting, but maybe fine. #{time}")
         @logger.error("#"*50)
         job_id = nil
       end
     rescue
       @logger.error("@"*50)
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-      @logger.error("error happened in job submitting, but maybe file. #{time}")
+      @logger.error("error happened in job submitting, but maybe fine. #{time}")
       @logger.error("@"*50)
       job_id = nil
     end
