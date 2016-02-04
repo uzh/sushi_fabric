@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20151120-105736'
+# Version = '20160204-150055'
 
 require 'csv'
 require 'fileutils'
@@ -710,7 +710,7 @@ rm -rf #{@scratch_dir} || exit 1
     save_parameters_as_tsv
     save_input_dataset_as_tsv
 
-    if `hostname`.chomp =~ /fgcz-s-034/
+    if SushiFabric::Application.config.fgcz?
       # this causes sqlite3 IO error in Mac OSX (Yosemite)
       pid = Process.fork do
         Process.fork do
