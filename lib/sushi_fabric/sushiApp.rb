@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20160204-150055'
+# Version = '20160303-091811'
 
 require 'csv'
 require 'fileutils'
@@ -366,7 +366,7 @@ GSTORE_DIR=#{@gstore_dir}
 echo "Job runs on `hostname`"
 echo "at $SCRATCH_DIR"
 mkdir $SCRATCH_DIR || exit 1
-cd $SCRATCH_DIR || exit 1
+cd $SCRATCH_DIR || exit 1
 
     EOF
   end
