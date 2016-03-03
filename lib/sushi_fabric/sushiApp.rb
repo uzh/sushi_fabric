@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20160303-093810'
+# Version = '20160303-160844'
 
 require 'csv'
 require 'fileutils'
@@ -363,6 +363,7 @@ set -o pipefail
 #### SET THE STAGE
 SCRATCH_DIR=#{@scratch_dir}
 GSTORE_DIR=#{@gstore_dir}
+INPUT_DATASET=#{@input_dataset_tsv_path}
 echo "Job runs on `hostname`"
 echo "at $SCRATCH_DIR"
 mkdir $SCRATCH_DIR || exit 1
