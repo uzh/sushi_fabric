@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20160303-160844'
+# Version = '20160317-153334'
 
 require 'csv'
 require 'fileutils'
@@ -412,7 +412,8 @@ rm -rf #{@scratch_dir} || exit 1
     script_content = File.read(job_script)
     job_id = 0
     begin
-      job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
+      #job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
+      job_id = @workflow_manager.start_monitoring2(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
     rescue => e
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
       @logger.error("*"*50)
