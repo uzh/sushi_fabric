@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20160321-052730'
+# Version = '20160331-140604'
 
 require 'csv'
 require 'fileutils'
@@ -355,8 +355,15 @@ class SushiApp
                    else
                      @scratch_result_dir + '_temp$$'
                    end
+    parent_data_set_job_ids = if @dataset_sushi_id and data_set = DataSet.find_by_id(@dataset_sushi_id.to_i)
+                                parent_data_set = data_set.data_set
+                                parent_data_set.jobs.map{|job| job.submit_job_id}.join(",")
+                              else
+                                ''
+                              end
     @out.print <<-EOF
 #!/bin/bash
+#\$ -hold_jid #{parent_data_set_job_ids}
 set -e
 set -o pipefail
 
@@ -412,8 +419,8 @@ rm -rf #{@scratch_dir} || exit 1
     script_content = File.read(job_script)
     job_id = 0
     begin
-      #job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
-      job_id = @workflow_manager.start_monitoring2(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir)
+      job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
+      #job_id = @workflow_manager.start_monitoring2(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir)
     rescue => e
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
       @logger.error("*"*50)
