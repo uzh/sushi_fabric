@@ -18,6 +18,7 @@ Or install it yourself as:
 
 ## Usage
 
+~~~~
   $ sushi_fabric -h                                                                                       16-05-10 15:37
   Usage: 
     sushi_fabric --class [SushiApp class] [options]
@@ -34,6 +35,7 @@ Or install it yourself as:
       -I, --load_path load_path        Add path where SushiApp class is located (default: ./lib)
       -n next_dataset_name,            Next DataSet Name (default: Analysis_Category+ID+Date )
           --next_dataset_name
+~~~~
 
 ## Contributing
 
