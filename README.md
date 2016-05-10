@@ -1,6 +1,6 @@
 # SushiFabric
 
-TODO: Write a gem description
+This library includes a core process called from [SUSHI](https://github.com/uzh/sushi). sushi_fabric command becomes available after installation. SUSHI application must inherit the SushiFabric:SushiApp class and overwrite #next_dataset and #commands methods. Please refer to [SUSHI](https://github.com/uzh/sushi) for more details about how to make SUSHI application.
 
 ## Installation
 
@@ -18,7 +18,22 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+  $ sushi_fabric -h                                                                                       16-05-10 15:37
+  Usage: 
+    sushi_fabric --class [SushiApp class] [options]
+      (Either --dataset_id or --dataset_tsv is required)
+      -c, --class class_name           SushiApp class name (required)
+      -i, --dataset_id dataset_id      DataSet ID in Sushi DB
+      -d, --dataset dataset_tsv        DataSet file (.tsv) (This option is prior to dataset_id option)
+      -s, --dataset_name dataset_name  DataSet name in Sushi (This will be used with --dataset option, default: tsv file base name)
+      -m parameterset_tsv,             Parameterset file (.tsv)
+          --parameterset
+      -r, --run                        Real run mode. without this option, it runs with test run mode which checks only DataSet and Parameters and no submittion
+      -p, --project project            Project Number (default: 1001)
+      -u, --user user                  Submit user (default: sushi_lover)
+      -I, --load_path load_path        Add path where SushiApp class is located (default: ./lib)
+      -n next_dataset_name,            Next DataSet Name (default: Analysis_Category+ID+Date )
+          --next_dataset_name
 
 ## Contributing
 
