@@ -1,6 +1,6 @@
 # SushiFabric
 
-This library includes a core process called from [SUSHI](https://github.com/uzh/sushi). sushi_fabric command becomes available after installation. SUSHI application must inherit the SushiFabric:SushiApp class and overwrite #next_dataset and #commands methods. Please refer to [SUSHI](https://github.com/uzh/sushi) for more details about how to make SUSHI application.
+This library includes a core process called from [SUSHI](https://github.com/uzh/sushi). sushi_fabric command becomes available after installation. It requires [WorkflowManager](https://github.com/uzh/workflow_manager) to execute sushi_fabric command. SUSHI application must inherit the SushiFabric:SushiApp class and overwrite #next_dataset and #commands methods. Please refer to [SUSHI](https://github.com/uzh/sushi) for more details about how to make SUSHI application. 
 
 ## Installation
 
