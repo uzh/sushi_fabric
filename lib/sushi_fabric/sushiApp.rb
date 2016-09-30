@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20160715-153019'
+# Version = '20160930-163938'
 
 require 'csv'
 require 'fileutils'
@@ -477,7 +477,10 @@ rm -rf #{@scratch_dir} || exit 1
       headers = @dataset_hash.map{|row| row.keys}.flatten.uniq
       out << headers
       @dataset_hash.each do |row|
-        out << headers.map{|header| row[header]}
+        out << headers.map{|header| 
+          val = row[header]
+          val.to_s.empty? ? nil:val
+        }
       end
     end
     file_path
@@ -488,7 +491,10 @@ rm -rf #{@scratch_dir} || exit 1
     CSV.open(file_path, 'w', :col_sep=>"\t") do |out|
       out << headers
       @result_dataset.each do |row_hash|
-        out << headers.map{|header| row_hash[header]}
+        out << headers.map{|header| 
+          val = row_hash[header]
+          val.to_s.empty? ? nil:val
+        }
       end
     end
     file_path
