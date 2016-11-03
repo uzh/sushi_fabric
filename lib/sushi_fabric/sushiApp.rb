@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20160930-163938'
+# Version = '20161103-080724'
 
 require 'csv'
 require 'fileutils'
@@ -335,7 +335,7 @@ class SushiApp
     @result_dir_base = if @next_dataset_name
                         [@next_dataset_name, Time.now.strftime("%Y-%m-%d--%H-%M-%S")].join("_")
                       else
-                        [@analysis_category, @name, @dataset_sushi_id.to_s, Time.now.strftime("%Y-%m-%d--%H-%M-%S")].join("_")
+                        [@name, @dataset_sushi_id.to_s, Time.now.strftime("%Y-%m-%d--%H-%M-%S")].join("_")
                       end
     @result_dir = File.join(@project, @result_dir_base)
     @scratch_result_dir = File.join(SCRATCH_DIR, @result_dir_base)
@@ -568,9 +568,9 @@ rm -rf #{@scratch_dir} || exit 1
       ## WRITE THE JOB SCRIPT
       sample_name = @dataset['Name']||@dataset.first
       @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-                      File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '_' + dataset.name.gsub(/\s+/,'_') + '.sh'
+                      File.join(@job_script_dir, sample_name) + '_' + dataset.name.gsub(/\s+/,'_') + '.sh'
                     else 
-                      File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '.sh'
+                      File.join(@job_script_dir, sample_name) + '.sh'
                     end
       make_job_script
       @job_scripts << @job_script
@@ -579,9 +579,9 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def dataset_mode
     @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-                    File.join(@job_script_dir, @analysis_category + '_' + dataset.name.gsub(/\s+/,'_') + '.sh')
+                    File.join(@job_script_dir, dataset.name.gsub(/\s+/,'_') + '.sh')
                   else 
-                    File.join(@job_script_dir, @analysis_category + '_' + 'job_script.sh')
+                    File.join(@job_script_dir, 'job_script.sh')
                   end
     make_job_script
     @job_scripts << @job_script
@@ -589,9 +589,9 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def batch_mode
     @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-                    File.join(@job_script_dir, @analysis_category + '_' + dataset.name.gsub(/\s+/,'_') + '.sh')
+                    File.join(@job_script_dir, dataset.name.gsub(/\s+/,'_') + '.sh')
                   else 
-                    File.join(@job_script_dir, @analysis_category + '_' + 'job_script.sh')
+                    File.join(@job_script_dir, 'job_script.sh')
                   end
     @dataset_hash.each do |row|
       @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
@@ -686,7 +686,7 @@ rm -rf #{@scratch_dir} || exit 1
       next_dataset_name = if name = @next_dataset_name
                             name.to_s
                           else
-                            "#{@analysis_category}_#{@name.gsub(/\s/,'').gsub(/_/,'')}_#{dataset.id}"
+                            "#{@name.gsub(/\s/,'').gsub(/_/,'')}_#{dataset.id}"
                           end
       data_set_arr = {'DataSetName'=>next_dataset_name, 'ProjectNumber'=>@project.gsub(/p/,''), 'ParentID'=>@dataset_sushi_id, 'Comment'=>@next_dataset_comment.to_s}
       csv = CSV.readlines(@next_dataset_tsv_path, :col_sep=>"\t")
