@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170224-141507'
+# Version = '20170224-143655'
 
 require 'csv'
 require 'fileutils'
@@ -170,7 +170,15 @@ def save_data_set(data_set_arr, headers, rows, user=nil)
       project.data_sets << data_set
       parent_data_set.data_sets << data_set if parent_data_set
       data_set.save
-      data_set.register_bfabric
+      if SushiFabric::Application.config.fgcz?
+        # this causes sqlite3 IO error in Mac OSX (Yosemite)
+        pid = Process.fork do
+          Process.fork do
+            data_set.register_bfabric
+          end # grand-child process
+        end # child process
+        Process.waitpid pid
+      end
       if user
         user.data_sets << data_set
         user.save
@@ -638,7 +646,15 @@ rm -rf #{@scratch_dir} || exit 1
         project.data_sets << data_set
         parent_data_set.data_sets << data_set if parent_data_set
         data_set.save
-        data_set.register_bfabric
+        if SushiFabric::Application.config.fgcz?
+          # this causes sqlite3 IO error in Mac OSX (Yosemite)
+          pid = Process.fork do
+            Process.fork do
+              data_set.register_bfabric
+            end # grand-child process
+          end # child process
+          Process.waitpid pid
+        end
         if user
           user.data_sets << data_set
           user.save
