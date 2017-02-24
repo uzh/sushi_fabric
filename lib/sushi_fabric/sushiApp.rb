@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20161103-082137'
+# Version = '20170224-141507'
 
 require 'csv'
 require 'fileutils'
@@ -170,6 +170,7 @@ def save_data_set(data_set_arr, headers, rows, user=nil)
       project.data_sets << data_set
       parent_data_set.data_sets << data_set if parent_data_set
       data_set.save
+      data_set.register_bfabric
       if user
         user.data_sets << data_set
         user.save
@@ -637,6 +638,7 @@ rm -rf #{@scratch_dir} || exit 1
         project.data_sets << data_set
         parent_data_set.data_sets << data_set if parent_data_set
         data_set.save
+        data_set.register_bfabric
         if user
           user.data_sets << data_set
           user.save
