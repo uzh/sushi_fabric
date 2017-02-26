@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170226-172128'
+# Version = '20170226-172319'
 
 require 'csv'
 require 'fileutils'
@@ -700,6 +700,9 @@ rm -rf #{@scratch_dir} || exit 1
       unless NO_ROR
         @current_user ||= nil
         @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
+
+        next_dataset = DataSet.find_by_id(@next_dataset_id)
+        next_dataset.register_bfabric
 
         # save job and dataset relation in Sushi DB
         job_ids.each do |job_id|
