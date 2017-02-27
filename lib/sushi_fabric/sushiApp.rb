@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170226-172319'
+# Version = '20170227-060558'
 
 require 'csv'
 require 'fileutils'
@@ -247,6 +247,8 @@ class SushiApp
       unless NO_ROR
         @current_user ||= nil
         @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
+        dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+        dataset.register_bfabric
       end
     elsif @dataset_sushi_id
       @dataset_hash = []
