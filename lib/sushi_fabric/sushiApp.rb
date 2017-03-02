@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170302-092829'
+# Version = '20170302-093250'
 
 require 'csv'
 require 'fileutils'
@@ -202,7 +202,7 @@ class SushiApp
   attr_accessor :workflow_manager
   attr_accessor :current_user
   attr_accessor :logger
-  attr_accessor :bfabric_registration
+  attr_accessor :off_bfabric_registration
   def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
@@ -248,8 +248,10 @@ class SushiApp
       unless NO_ROR
         @current_user ||= nil
         @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
-        dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-        dataset.register_bfabric
+        unless @off_bfabric_registration
+          dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+          dataset.register_bfabric
+        end
       end
     elsif @dataset_sushi_id
       @dataset_hash = []
@@ -704,8 +706,10 @@ rm -rf #{@scratch_dir} || exit 1
         @current_user ||= nil
         @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
 
-        next_dataset = DataSet.find_by_id(@next_dataset_id)
-        next_dataset.register_bfabric
+        unless @off_bfabric_registration
+          next_dataset = DataSet.find_by_id(@next_dataset_id)
+          next_dataset.register_bfabric
+        end
 
         # save job and dataset relation in Sushi DB
         job_ids.each do |job_id|
