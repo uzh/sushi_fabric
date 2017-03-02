@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170227-060558'
+# Version = '20170302-092829'
 
 require 'csv'
 require 'fileutils'
@@ -202,6 +202,7 @@ class SushiApp
   attr_accessor :workflow_manager
   attr_accessor :current_user
   attr_accessor :logger
+  attr_accessor :bfabric_registration
   def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
