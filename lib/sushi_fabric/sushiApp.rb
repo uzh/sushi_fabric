@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170302-093250'
+# Version = '20170303-140449'
 
 require 'csv'
 require 'fileutils'
@@ -249,8 +249,9 @@ class SushiApp
         @current_user ||= nil
         @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
         unless @off_bfabric_registration
-          dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-          dataset.register_bfabric
+          if dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+            dataset.register_bfabric
+          end
         end
       end
     elsif @dataset_sushi_id
@@ -707,8 +708,9 @@ rm -rf #{@scratch_dir} || exit 1
         @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
 
         unless @off_bfabric_registration
-          next_dataset = DataSet.find_by_id(@next_dataset_id)
-          next_dataset.register_bfabric
+          if next_dataset = DataSet.find_by_id(@next_dataset_id)
+            next_dataset.register_bfabric
+          end
         end
 
         # save job and dataset relation in Sushi DB
