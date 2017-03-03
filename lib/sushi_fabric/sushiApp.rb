@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170303-140449'
+# Version = '20170303-160743'
 
 require 'csv'
 require 'fileutils'
@@ -174,6 +174,8 @@ def save_data_set(data_set_arr, headers, rows, user=nil)
         user.data_sets << data_set
         user.save
       end
+    else
+      headers[0] = DataSet.find_by_md5(data_set.md5)
     end
     data_set.id
   end
@@ -247,11 +249,14 @@ class SushiApp
       end
       unless NO_ROR
         @current_user ||= nil
-        @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
-        unless @off_bfabric_registration
-          if dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-            dataset.register_bfabric
+        if @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
+          unless @off_bfabric_registration
+            if dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+              dataset.register_bfabric
+            end
           end
+        elsif data_set = headers[0] and data_set.instance_of?(DataSet)
+          @dataset_sushi_id = data_set.id
         end
       end
     elsif @dataset_sushi_id
@@ -647,6 +652,8 @@ rm -rf #{@scratch_dir} || exit 1
           user.data_sets << data_set
           user.save
         end
+      else
+        headers[0] = DataSet.find_by_md5(data_set.md5)
       end
       data_set.id
     end
