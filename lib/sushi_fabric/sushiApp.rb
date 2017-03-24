@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170303-160743'
+# Version = '20170324-161522'
 
 require 'csv'
 require 'fileutils'
@@ -442,10 +442,15 @@ rm -rf #{@scratch_dir} || exit 1
     end
     job_id
   end
-  def submit(job_script)
+  def submit(job_script, mock=false)
     begin
-      job_id = submit_command(job_script)
-      job_id = job_id.to_i
+      job_id = unless mock
+                 i = submit_command(job_script)
+                 i.to_i
+               else
+                 #Time.now.to_f.to_s.gsub('.', '')
+                 1234
+               end
       unless job_id.to_i > 1
         @logger.error("#"*50)
         time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
@@ -658,7 +663,7 @@ rm -rf #{@scratch_dir} || exit 1
       data_set.id
     end
   end
-  def main
+  def main(mock=false)
     ## sushi writes creates the job scripts and builds the result data set that is to be generated
     @result_dataset = []
     @job_scripts = []
@@ -673,13 +678,18 @@ rm -rf #{@scratch_dir} || exit 1
       warn "the process mode (#{@params['process_mode']}) is not defined"
       raise "stop job submitting"
     end
+    if mock
+      make_dummy_files
+    end
     copy_inputdataset_parameter_jobscripts
 
     # job submittion
+    gstore_job_script_paths = []
     @job_scripts.each_with_index do |job_script, i|
-      if job_id = submit(job_script)
+      if job_id = submit(job_script, mock)
         @job_ids << job_id
         print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
+        gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
       end
     end
 
@@ -721,9 +731,10 @@ rm -rf #{@scratch_dir} || exit 1
         end
 
         # save job and dataset relation in Sushi DB
-        job_ids.each do |job_id|
+        job_ids.each_with_index do |job_id, i|
           new_job = Job.new
           new_job.submit_job_id = job_id.to_i
+          new_job.script_path = gstore_job_script_paths[i]
           new_job.next_dataset_id = @next_dataset_id
           new_job.save
           new_job.data_set.jobs << new_job
@@ -755,6 +766,53 @@ rm -rf #{@scratch_dir} || exit 1
     else
       main
     end
+  end
+  def make_dummy_files
+    dummy_files_header = []
+    headers = @result_dataset.map{|row| row.keys}.flatten.uniq
+    headers.select{|header| header.tag?('File')||header.tag?('Link')}.each do |header|
+      dummy_files_header << header
+    end
+    dummy_files_ = []
+    @result_dataset.each do |row|
+      dummy_files_.concat(dummy_files_header.map{|header| row[header]})
+    end
+    dummy_files = []
+    dummy_files_.each do |file|
+      dummy_files << file.gsub(@result_dir, '')
+    end
+    dummy_files.uniq!
+
+    dirs = []
+    dummy_files.permutation(2).each do |a,b|
+      if a.include?(b) and b !~ /\./
+        dirs << b
+      end
+    end
+    dirs.each do |dir|
+      dummy_files.delete(dir)
+    end
+    dirs.each do |dir|
+      command = "mkdir -p #{File.join(@scratch_result_dir, dir)}"
+      puts command
+      `#{command}`
+    end
+    dummy_files.each do |file|
+      command = if file =~ /.html/
+                  "echo 'Hello, SUSHI world!' > #{File.join(@scratch_result_dir, file)}"
+                else
+                  "touch #{File.join(@scratch_result_dir, file)}"
+                end
+      puts command
+      `#{command}`
+    end
+  end
+  def mock_run
+    test_run
+    prepare_result_dir
+    save_parameters_as_tsv
+    save_input_dataset_as_tsv
+    main(true)
   end
   def test_run
     set_input_dataset
