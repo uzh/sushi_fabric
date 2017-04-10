@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170324-161522'
+# Version = '20170410-034927'
 
 require 'csv'
 require 'fileutils'
@@ -17,6 +17,7 @@ module SushiFabric
     config.gstore_dir = File.join(default_root, 'public/gstore/projects')
     config.sushi_app_dir = default_root
     config.scratch_dir = '/tmp/scratch'
+    config.module_source = nil
   end
 
   # load custmized parameters if there is
@@ -35,6 +36,7 @@ module SushiFabric
     config.gstore_dir = File.join(#{default_root}, 'public/gstore/projects')
     config.sushi_app_dir = #{default_root}
     config.scratch_dir = '/tmp/scratch'
+    config.module_source = nil
   end
 end
       EOF
@@ -46,6 +48,7 @@ end
   GSTORE_DIR = config.gstore_dir
   SUSHI_APP_DIR = config.sushi_app_dir
   SCRATCH_DIR = config.scratch_dir
+  MODULE_SOURCE = config.module_source
   
   unless File.exist?(GSTORE_DIR)
     FileUtils.mkdir_p GSTORE_DIR
@@ -192,6 +195,7 @@ class SushiApp
   attr_reader :analysis_category
   attr_reader :description
   attr_reader :name
+  attr_reader :modules
   attr_accessor :dataset_tsv_file
   attr_accessor :parameterset_tsv_file
   attr_accessor :dataset_sushi_id
@@ -217,6 +221,8 @@ class SushiApp
     @params['process_mode'] = 'SAMPLE'
     @job_ids = []
     @required_columns = []
+    @module_source = MODULE_SOURCE
+    @modules = []
     #@workflow_manager = workflow_manager_instance||DRbObject.new_with_uri(WORKFLOW_MANAGER)
   end
   def set_input_dataset
@@ -360,6 +366,20 @@ class SushiApp
     FileUtils.mkdir_p(@scratch_result_dir)
     FileUtils.mkdir_p(@job_script_dir)
   end
+  def check_latest_module_version(mod)
+    command = "module whatis #{mod}"
+    IO.popen(command) do |io|
+      latest_mod = nil
+      while line = io.gets
+        unless line.chomp.strip.empty?
+          latest_mod = line.split.first
+          break
+        end
+      end
+    end
+    latest_mod = nil if latest_mod == "Failed"
+    latest_mod
+  end
   def job_header
     @scratch_dir = if @params['process_mode'] == 'SAMPLE'
                      @scratch_result_dir + "_" + @dataset['Name'] + '_temp$$'
@@ -372,6 +392,19 @@ class SushiApp
                               else
                                 ''
                               end
+    module_src_command = if @module_source and @modules and !@modules.empty?
+                       "source #{@module_source}"
+                     else
+                       ""
+                     end
+    module_add_commands = if @modules and !@modules.empty?
+                            #modules_with_version = @modules.map{|mod| check_latest_module_version(mod)}
+                            #modules_with_version.compact!
+                            #"module add #{modules_with_version.join(' ')}"
+                            "module add #{@modules.join(' ')}"
+                          else
+                            ""
+                          end
     @out.print <<-EOF
 #!/bin/bash
 #{hold_jid_option}
@@ -386,6 +419,8 @@ echo "Job runs on `hostname`"
 echo "at $SCRATCH_DIR"
 mkdir $SCRATCH_DIR || exit 1
 cd $SCRATCH_DIR || exit 1
+#{module_src_command}
+#{module_add_commands}
 
     EOF
   end
