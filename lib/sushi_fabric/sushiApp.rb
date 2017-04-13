@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170410-034927'
+# Version = '20170413-113844'
 
 require 'csv'
 require 'fileutils'
@@ -367,16 +367,8 @@ class SushiApp
     FileUtils.mkdir_p(@job_script_dir)
   end
   def check_latest_module_version(mod)
-    command = "module whatis #{mod}"
-    IO.popen(command) do |io|
-      latest_mod = nil
-      while line = io.gets
-        unless line.chomp.strip.empty?
-          latest_mod = line.split.first
-          break
-        end
-      end
-    end
+    command_out =  %x[ bash -lc "source #{@module_source}; module whatis #{mod} 2>&1" ]
+    latest_mod = command_out.split.first
     latest_mod = nil if latest_mod == "Failed"
     latest_mod
   end
@@ -398,10 +390,10 @@ class SushiApp
                        ""
                      end
     module_add_commands = if @modules and !@modules.empty?
-                            #modules_with_version = @modules.map{|mod| check_latest_module_version(mod)}
-                            #modules_with_version.compact!
-                            #"module add #{modules_with_version.join(' ')}"
-                            "module add #{@modules.join(' ')}"
+                            modules_with_version = @modules.map{|mod| check_latest_module_version(mod)}
+                            modules_with_version.compact!
+                            "module add #{modules_with_version.join(' ')}"
+                            #"module add #{@modules.join(' ')}"
                           else
                             ""
                           end
