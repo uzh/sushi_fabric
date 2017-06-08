@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20150327-011934'
+# Version = '20170608-164804'
 
 require 'sushi_fabric'
 
@@ -20,6 +20,7 @@ Usage:
   o.on(:user, 'sushi_lover', '-u user', '--user', String, 'Submit user (default: sushi_lover)')
   o.on(:load_path, '-I load_path', '--load_path', 'Add path where SushiApp class is located (default: ./lib)')
   o.on(:next_dataset_name, '-n next_dataset_name', '--next_dataset_name', 'Next DataSet Name (default: Analysis_Category+ID+Date )')
+  o.on(:off_bfab, '-f', '--off_bfab', 'Do NOT register the dataset in BFabric (default: false, namely register in BFabric)')
   o.parse!(ARGV)
 end
 opt.project = 'p' + opt.project
@@ -64,6 +65,9 @@ usecase.user = opt.user
 usecase.dataset_sushi_id = opt.dataset_id
 usecase.dataset_tsv_file = opt.dataset_tsv
 usecase.parameterset_tsv_file = opt.parameterset_tsv
+if opt.off_bfab
+  usecase.off_bfabric_registration = opt.off_bfab
+end
 if opt.dataset_name
   usecase.dataset_name = opt.dataset_name
 end
