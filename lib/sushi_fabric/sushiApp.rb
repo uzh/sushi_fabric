@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170413-113844'
+# Version = '20170720-124255'
 
 require 'csv'
 require 'fileutils'
@@ -114,7 +114,11 @@ class ::Hash
     end
   end
   def data_type(k)
-    @defaults[k].class
+    if @defaults
+      @defaults[k].class
+    else
+      get(k).class
+    end
   end
   def data_types
     Hash[@defaults.map{|k,v| [k, v.class]}]
