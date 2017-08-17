@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170721-155710'
+# Version = '20170817-160704'
 
 require 'csv'
 require 'fileutils'
@@ -674,6 +674,7 @@ rm -rf #{@scratch_dir} || exit 1
       if comment = data_set_hash['Comment'] and !comment.to_s.empty?
         data_set.comment = comment
       end
+      data_set.sushi_app_name = self.class.name
 
       sample_hash = {}
       rows.each do |row|
@@ -1042,7 +1043,7 @@ rm -rf #{@scratch_dir} || exit 1
       err_msgs.concat([err_msg])
       failures += 1
     else
-      puts "\e[32mPASSED\e[0m:"
+      puts "\e[32mPASSED\e[0m: #{WORKFLOW_MANAGER}"
     end
 
     if failures > 0
