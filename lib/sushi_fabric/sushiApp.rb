@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170904-134222'
+# Version = '20170905-154636'
 
 require 'csv'
 require 'fileutils'
@@ -671,11 +671,11 @@ rm -rf #{@scratch_dir} || exit 1
       data_set.project = project
       if parent_id = data_set_hash['ParentID'] and parent_data_set = DataSet.find_by_id(parent_id.to_i)
         data_set.data_set = parent_data_set
+        data_set.sushi_app_name = self.class.name
       end
       if comment = data_set_hash['Comment'] and !comment.to_s.empty?
         data_set.comment = comment
       end
-      data_set.sushi_app_name = self.class.name
 
       sample_hash = {}
       rows.each do |row|
