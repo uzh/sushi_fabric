@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170608-164804'
+# Version = '20170908-105900'
 
 require 'sushi_fabric'
 
@@ -21,6 +21,7 @@ Usage:
   o.on(:load_path, '-I load_path', '--load_path', 'Add path where SushiApp class is located (default: ./lib)')
   o.on(:next_dataset_name, '-n next_dataset_name', '--next_dataset_name', 'Next DataSet Name (default: Analysis_Category+ID+Date )')
   o.on(:off_bfab, '-f', '--off_bfab', 'Do NOT register the dataset in BFabric (default: false, namely register in BFabric)')
+  o.on(:mango_run_name, '-g mango_run_name', '--mango_run_name', 'ManGO RunName_oBFabricID')
   o.parse!(ARGV)
 end
 opt.project = 'p' + opt.project
@@ -73,6 +74,9 @@ if opt.dataset_name
 end
 if opt.next_dataset_name
   usecase.next_dataset_name = opt.next_dataset_name
+end
+if opt.mango_run_name
+  usecase.mango_run_name = opt.mango_run_name
 end
 if opt.run_mode
   usecase.run

@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170905-154636'
+# Version = '20170908-110323'
 
 require 'csv'
 require 'fileutils'
@@ -220,6 +220,7 @@ class SushiApp
   attr_accessor :current_user
   attr_accessor :logger
   attr_accessor :off_bfabric_registration
+  attr_accessor :mango_run_name
   def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
@@ -675,6 +676,9 @@ rm -rf #{@scratch_dir} || exit 1
       end
       if comment = data_set_hash['Comment'] and !comment.to_s.empty?
         data_set.comment = comment
+      end
+      if @mango_run_name
+        data_set.run_name_order_id = @mango_run_name
       end
 
       sample_hash = {}
