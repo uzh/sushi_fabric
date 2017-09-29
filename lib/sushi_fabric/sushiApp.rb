@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170908-110323'
+# Version = '20170929-083439'
 
 require 'csv'
 require 'fileutils'
@@ -18,6 +18,7 @@ module SushiFabric
     config.sushi_app_dir = default_root
     config.scratch_dir = '/tmp/scratch'
     config.module_source = nil
+    config.course_mode = nil
   end
 
   # load custmized parameters if there is
@@ -37,6 +38,7 @@ module SushiFabric
     config.sushi_app_dir = #{default_root}
     config.scratch_dir = '/tmp/scratch'
     config.module_source = nil
+    config.course_mode = nil
   end
 end
       EOF
