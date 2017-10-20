@@ -4,22 +4,63 @@
 require './lib/sushi_fabric/sushiApp'
 
 include SushiFabric
-describe Array do
+describe "Array monkey patch" do
   describe "[1,'a',2,'b'].to_h" do
     subject(:array_to_h){[1,"a",2,"b"].to_h}
     let(:hash){{1=>"a", 2=>"b"}}
     it {is_expected.to eq hash}
   end
 end
-describe Hash do
-  describe "hash.set(1, 'a'); hash.get(1)" do
-    subject(:hash){{}}
-    before do
-      hash.set(1, 'a')
+
+describe "Hash monkey patch" do
+  subject(:hash){{}}
+  context "hash.set(1, 'a')" do
+    describe "hash.get(1)" do
+      before{hash.set(1, 'a')}
+      specify{expect(hash.get(1)).to eq 'a'}
     end
-    specify{expect(hash.get(1)).to eq 'a'}
+  end
+  context "hash[1, 'desc']='test'" do
+    describe "hash[1, 'desc']" do
+      before{hash[1, 'desc'] = 'test'}
+      subject(:target){hash[1, 'desc']}
+      it{is_expected.to eq 'test'}
+    end
+  end
+  describe "#data_type" do
+    context "hash[:key]=1" do
+      before{hash[:key]=1}
+      describe "hash.data_type(:key)" do
+        subject{hash.data_type(:key)}
+        it{is_expected.to eq Fixnum}
+      end
+    end
+    context "hash[:key]=['a',1,2,3]" do
+      before{hash[:key]=["a",1,2,3]}
+      describe "hash.data_type(:key)" do
+        subject{hash.data_type(:key)}
+        it{is_expected.to eq String}
+      end
+    end
   end
 end
+
+describe "String monkey patch" do
+  describe "#tag?" do
+    context "string = 'Read1 [File]'" do
+      let(:string){"Read1 [File]"}
+      describe "string.tag?('File')" do
+        subject{string.tag?("File")}
+        it{is_expected.to_not be_falsey}
+      end
+      describe "string.tag?('Hoge')" do
+        subject{string.tag?("Hoge")}
+        it{is_expected.to be_falsey}
+      end
+    end
+  end
+end
+
 describe SushiApp do
   subject(:sushi_app) {SushiApp.new}
   context 'when new' do
