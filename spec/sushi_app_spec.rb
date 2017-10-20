@@ -4,6 +4,22 @@
 require './lib/sushi_fabric/sushiApp'
 
 include SushiFabric
+describe Array do
+  describe "[1,'a',2,'b'].to_h" do
+    subject(:array_to_h){[1,"a",2,"b"].to_h}
+    let(:hash){{1=>"a", 2=>"b"}}
+    it {is_expected.to eq hash}
+  end
+end
+describe Hash do
+  describe "hash.set(1, 'a'); hash.get(1)" do
+    subject(:hash){{}}
+    before do
+      hash.set(1, 'a')
+    end
+    specify{expect(hash.get(1)).to eq 'a'}
+  end
+end
 describe SushiApp do
   subject(:sushi_app) {SushiApp.new}
   context 'when new' do

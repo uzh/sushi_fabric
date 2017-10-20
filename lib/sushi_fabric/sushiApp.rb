@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20170929-083439'
+# Version = '20171020-141303'
 
 require 'csv'
 require 'fileutils'
@@ -29,6 +29,7 @@ module SushiFabric
   else
     FileUtils.mkdir_p File.dirname(config_file)
     open(config_file+'.rb', "w") do |out|
+      default_root = Rails.root||Dir.pwd
       out.print <<-EOF
 module SushiFabric
   class Application < Rails::Application
