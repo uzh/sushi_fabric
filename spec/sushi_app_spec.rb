@@ -43,6 +43,19 @@ describe "Hash monkey patch" do
       end
     end
   end
+  describe "#default_value" do
+    context "hash.default_value(:key, :default_value)" do
+      before do
+        hash[:key] = 0
+        hash.instance_variable_set(:@defaults, {})
+        hash.default_value(:key, :default_value)
+      end
+      describe "hash.default_value(:key)" do
+        subject{hash.default_value(:key)}
+        it{is_expected.to eq :default_value}
+      end
+    end
+  end
 end
 
 describe "String monkey patch" do
