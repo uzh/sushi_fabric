@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20171020-141303'
+# Version = '20180209-144924'
 
 require 'csv'
 require 'fileutils'
@@ -8,6 +8,7 @@ require 'yaml'
 require 'drb/drb'
 gem 'rails'
 require 'rails/all'
+require 'google-analytics-rails'
 
 module SushiFabric
   class Application < Rails::Application
