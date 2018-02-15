@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20180209-144924'
+# Version = '20180215-142840'
 
 require 'csv'
 require 'fileutils'
@@ -1043,7 +1043,8 @@ rm -rf #{@scratch_dir} || exit 1
 
     print 'check workflow manager: '
     begin
-      hello = `wfm_hello #{WORKFLOW_MANAGER}`
+      @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
+      hello = @workflow_manager.hello
     rescue
     end
     unless hello =~ /hello/
