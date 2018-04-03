@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20180215-142840'
+# Version = '20180403-145455'
 
 require 'csv'
 require 'fileutils'
@@ -418,6 +418,7 @@ class SushiApp
 #{hold_jid_option}
 set -e
 set -o pipefail
+umask 0002
 
 #### SET THE STAGE
 SCRATCH_DIR=#{@scratch_dir}
