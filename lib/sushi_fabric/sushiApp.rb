@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20180403-145455'
+# Version = '20180412-093456'
 
 require 'csv'
 require 'fileutils'
@@ -639,6 +639,7 @@ rm -rf #{@scratch_dir} || exit 1
     end
   end
   def dataset_mode
+    @dataset = @dataset_hash # for a case of @dataset is used in def next_datast in SUSHIApp
     @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
                     File.join(@job_script_dir, @analysis_category + '_' + dataset.name.gsub(/[\s+,\/]/,'_') + '.sh')
                   else 
