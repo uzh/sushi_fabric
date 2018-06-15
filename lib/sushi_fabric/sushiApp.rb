@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20180412-093456'
+# Version = '20180615-110546'
 
 require 'csv'
 require 'fileutils'
@@ -662,7 +662,7 @@ rm -rf #{@scratch_dir} || exit 1
     end
     @job_scripts << @job_script
   end
-  def save_data_set(data_set_arr, headers, rows, user=nil)
+  def save_data_set(data_set_arr, headers, rows, user=nil, child=nil)
     data_set_hash = Hash[*data_set_arr]
     unless project = Project.find_by_number(data_set_hash['ProjectNumber'].to_i)
       project = Project.new
@@ -696,6 +696,10 @@ rm -rf #{@scratch_dir} || exit 1
         sample.key_value = sample_hash.to_s
         sample.save unless sample.saved?
         data_set.samples << sample
+      end
+
+      if child
+        data_set.child = true
       end
 
       data_set.md5 = data_set.md5hexdigest
@@ -772,7 +776,7 @@ rm -rf #{@scratch_dir} || exit 1
       end
       unless NO_ROR
         @current_user ||= nil
-        @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
+        @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user, @child)
 
         unless @off_bfabric_registration
           if next_dataset = DataSet.find_by_id(@next_dataset_id)
