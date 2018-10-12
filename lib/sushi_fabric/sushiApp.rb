@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20180615-110546'
+# Version = '20181012-131954'
 
 require 'csv'
 require 'fileutils'
@@ -235,6 +235,7 @@ class SushiApp
     @params['scratch'] = nil
     @params['node'] = ''
     @params['process_mode'] = 'SAMPLE'
+    @params['samples'] = ''
     @job_ids = []
     @required_columns = []
     @module_source = MODULE_SOURCE
@@ -624,18 +625,21 @@ rm -rf #{@scratch_dir} || exit 1
     @out.close
   end
   def sample_mode
+    selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
     @dataset_hash.each do |row|
       @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
-      ## WRITE THE JOB SCRIPT
-      sample_name = @dataset['Name']||@dataset.first
-      @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-                      File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '_' + dataset.name.gsub(/\s+/,'_') + '.sh'
-                    else 
-                      File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '.sh'
-                    end
-      make_job_script
-      @job_scripts << @job_script
-      @result_dataset << next_dataset
+      if selected_samples[@dataset['Name']]
+        ## WRITE THE JOB SCRIPT
+        sample_name = @dataset['Name']||@dataset.first
+        @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+                        File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '_' + dataset.name.gsub(/\s+/,'_') + '.sh'
+                      else
+                        File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '.sh'
+                      end
+        make_job_script
+        @job_scripts << @job_script
+        @result_dataset << next_dataset
+      end
     end
   end
   def dataset_mode
