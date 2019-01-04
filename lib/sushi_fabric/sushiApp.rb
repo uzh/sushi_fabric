@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20181012-131954'
+# Version = '20190104-191156'
 
 require 'csv'
 require 'fileutils'
@@ -319,7 +319,9 @@ class SushiApp
   end
 
   def set_output_files
-    @dataset = {}
+    if @params['process_mode'] == 'SAMPLE'
+      @dataset = {}
+    end
     next_dataset.keys.select{|header| header.tag?('File')}.each do |header|
       @output_files ||= []
       @output_files << header
@@ -520,7 +522,7 @@ rm -rf #{@scratch_dir} || exit 1
     @input_dataset_file = 'input_dataset.tsv'
     @next_dataset_file = 'dataset.tsv'
     @input_dataset_tsv_path = File.join(@gstore_result_dir, @input_dataset_file)
-    @parameters_tsv_path = File.join(@gstore_result_dir, @input_dataset_file)
+    @parameters_tsv_path = File.join(@gstore_result_dir, @parameter_file)
     @next_dataset_tsv_path = File.join(@gstore_result_dir, @next_dataset_file)
   end
   def save_parameters_as_tsv
@@ -994,7 +996,9 @@ rm -rf #{@scratch_dir} || exit 1
     puts "\trequired  : #{@required_params}"
 
     print 'check next dataset: '
-    @dataset={}
+    if @params['process_mode'] == 'SAMPLE'
+      @dataset={}
+    end
     unless self.next_dataset
       err_msg = []
       err_msg << "\e[31mFAILURE\e[0m: next dataset is not set yet. you should overwrite SushiApp#next_dataset method in #{self.class}"
