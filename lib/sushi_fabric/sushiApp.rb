@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20190104-191156'
+# Version = '20190425-142129'
 
 require 'csv'
 require 'fileutils'
@@ -225,6 +225,8 @@ class SushiApp
   attr_accessor :logger
   attr_accessor :off_bfabric_registration
   attr_accessor :mango_run_name
+  attr_accessor :input_dataset_bfabric_application_number
+  attr_accessor :next_dataset_bfabric_application_number
   def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
@@ -275,7 +277,7 @@ class SushiApp
         if @dataset_sushi_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user)
           unless @off_bfabric_registration
             if dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
-              dataset.register_bfabric
+              dataset.register_bfabric(bfabric_application_number: @input_dataset_bfabric_application_number)
             end
           end
         elsif data_set = headers[0] and data_set.instance_of?(DataSet)
@@ -586,6 +588,7 @@ rm -rf #{@scratch_dir} || exit 1
     org = @scratch_result_dir
     dest = @gstore_project_dir
     copy_commands(org, dest, 'now').each do |command|
+      puts `which python`
       puts command
       unless system command
         raise "fails in copying input_dataset, parameters and jobscript files from /scratch to /gstore"
@@ -597,6 +600,7 @@ rm -rf #{@scratch_dir} || exit 1
     org = @next_dataset_tsv_path
     dest = File.join(@gstore_project_dir, @result_dir_base)
     copy_commands(org, dest, 'now').each do |command|
+      puts `which python`
       puts command
       unless system command
         raise "fails in copying next_dataset files from /scratch to /gstore"
@@ -786,7 +790,7 @@ rm -rf #{@scratch_dir} || exit 1
 
         unless @off_bfabric_registration
           if next_dataset = DataSet.find_by_id(@next_dataset_id)
-            next_dataset.register_bfabric
+            next_dataset.register_bfabric(bfabric_application_number: @next_dataset_bfabric_application_number)
           end
         end
 
