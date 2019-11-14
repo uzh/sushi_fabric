@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20190731-142332'
+# Version = '20191114-151205'
 
 require 'csv'
 require 'fileutils'
@@ -631,11 +631,8 @@ rm -rf #{@scratch_dir} || exit 1
     @out.close
   end
   def sample_mode
-    selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
-    @dataset_hash.each do |row|
-      @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
-      if selected_samples[@dataset['Name']]
-        ## WRITE THE JOB SCRIPT
+    set_job_script =-> (dataset_) do
+        @dataset = dataset_
         sample_name = @dataset['Name']||@dataset.first
         @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
                         File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '_' + dataset.name.gsub(/\s+/,'_') + '.sh'
@@ -645,7 +642,24 @@ rm -rf #{@scratch_dir} || exit 1
         make_job_script
         @job_scripts << @job_script
         @result_dataset << next_dataset
+    end
+    selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
+    last_sample = nil
+    @dataset_hash.each do |row|
+      @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
+      if selected_samples[@dataset['Name']]
+        header = if header_ = row.keys.find{|h| h.tag?('Last')}
+                   header_.gsub(/\[.+\]/,'').strip
+                 end
+        if header and eval(@dataset[header])
+          last_sample = @dataset
+        else
+          set_job_script.(@dataset)
+        end
       end
+    end
+    if last_sample
+      set_job_script.(last_sample)
     end
   end
   def dataset_mode
