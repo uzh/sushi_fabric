@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20191114-151205'
+# Version = '20191115-103323'
 
 require 'csv'
 require 'fileutils'
@@ -243,6 +243,7 @@ class SushiApp
     @module_source = MODULE_SOURCE
     @modules = []
     #@workflow_manager = workflow_manager_instance||DRbObject.new_with_uri(WORKFLOW_MANAGER)
+    @last_job = true
   end
   def set_input_dataset
     if @dataset_tsv_file
@@ -429,6 +430,7 @@ umask 0002
 SCRATCH_DIR=#{@scratch_dir}
 GSTORE_DIR=#{@gstore_dir}
 INPUT_DATASET=#{@input_dataset_tsv_path}
+LAST_JOB=#{@last_job.to_s.upcase}
 echo "Job runs on `hostname`"
 echo "at $SCRATCH_DIR"
 mkdir $SCRATCH_DIR || exit 1
@@ -631,35 +633,21 @@ rm -rf #{@scratch_dir} || exit 1
     @out.close
   end
   def sample_mode
-    set_job_script =-> (dataset_) do
-        @dataset = dataset_
+    selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
+    @dataset_hash.each_with_index do |row, i|
+      @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
+      if selected_samples[@dataset['Name']]
         sample_name = @dataset['Name']||@dataset.first
         @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
                         File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '_' + dataset.name.gsub(/\s+/,'_') + '.sh'
                       else
                         File.join(@job_script_dir, @analysis_category + '_' + sample_name) + '.sh'
                       end
+        @last_job = (i == @dataset_hash.length - 1)
         make_job_script
         @job_scripts << @job_script
         @result_dataset << next_dataset
-    end
-    selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
-    last_sample = nil
-    @dataset_hash.each do |row|
-      @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
-      if selected_samples[@dataset['Name']]
-        header = if header_ = row.keys.find{|h| h.tag?('Last')}
-                   header_.gsub(/\[.+\]/,'').strip
-                 end
-        if header and eval(@dataset[header])
-          last_sample = @dataset
-        else
-          set_job_script.(@dataset)
-        end
       end
-    end
-    if last_sample
-      set_job_script.(last_sample)
     end
   end
   def dataset_mode
