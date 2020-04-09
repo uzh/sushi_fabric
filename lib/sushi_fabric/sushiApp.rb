@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20191219-104017'
+# Version = '20200409-110502'
 
 require 'csv'
 require 'fileutils'
@@ -391,8 +391,13 @@ class SushiApp
   end
   def check_latest_module_version(mod)
     command_out =  %x[ bash -lc "source #{@module_source}; module whatis #{mod} 2>&1" ]
-    latest_mod = command_out.split.first
-    latest_mod = nil if latest_mod == "Failed"
+    latest_mod = nil
+    command_out.split("\n").each do |line|
+      if line =~ /#{mod}/
+        latest_mod = line.split.first
+        break
+      end
+    end
     latest_mod
   end
   def job_header
@@ -416,7 +421,6 @@ class SushiApp
                             modules_with_version = @modules.map{|mod| check_latest_module_version(mod)}
                             modules_with_version.compact!
                             "module add #{modules_with_version.join(' ')}"
-                            #"module add #{@modules.join(' ')}"
                           else
                             ""
                           end
