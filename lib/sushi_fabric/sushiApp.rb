@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20200409-110502'
+# Version = '20200703-164839'
 
 require 'csv'
 require 'fileutils'
@@ -759,28 +759,14 @@ rm -rf #{@scratch_dir} || exit 1
     if mock
       make_dummy_files
     end
-    copy_inputdataset_parameter_jobscripts
 
-    # job submittion
-    gstore_job_script_paths = []
-    @job_scripts.each_with_index do |job_script, i|
-      if job_id = submit(job_script, mock)
-        @job_ids << job_id
-        print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
-        gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
-      end
-    end
-
-    puts
-    print 'job scripts: '
-    p @job_scripts
     print 'result dataset: '
     p @result_dataset
 
     # copy application data to gstore 
     @next_dataset_tsv_path = save_next_dataset_as_tsv
 
-    if !@job_ids.empty? and @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+    if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
       data_set_arr = []
       headers = []
       rows = []
@@ -805,20 +791,46 @@ rm -rf #{@scratch_dir} || exit 1
         unless @off_bfabric_registration
           if next_dataset = DataSet.find_by_id(@next_dataset_id)
             next_dataset.register_bfabric(bfabric_application_number: @next_dataset_bfabric_application_number)
+            if next_dataset.workunit_id
+              @job_scripts.each do |job_script|
+                open(job_script, "a") do |out|
+                  out.puts "module load Dev/Python"
+                  out.puts "WORKUNIT_ID=#{next_dataset.workunit_id}"
+                  out.puts "update_resource_size -w $WORKUNIT_ID"
+                end
+              end
+            end
           end
         end
+      end
+    end
+    copy_inputdataset_parameter_jobscripts
 
-        # save job and dataset relation in Sushi DB
-        job_ids.each_with_index do |job_id, i|
-          new_job = Job.new
-          new_job.submit_job_id = job_id.to_i
-          new_job.script_path = gstore_job_script_paths[i]
-          new_job.next_dataset_id = @next_dataset_id
-          new_job.save
-          new_job.data_set.jobs << new_job
-          new_job.data_set.save
-        end
+    # job submittion
+    gstore_job_script_paths = []
+    @job_scripts.each_with_index do |job_script, i|
+      if job_id = submit(job_script, mock)
+        @job_ids << job_id
+        print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
+        gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
+      end
+    end
 
+    puts
+    print 'job scripts: '
+    p @job_scripts
+
+
+    unless @job_ids.empty? or NO_ROR
+      # save job and dataset relation in Sushi DB
+      job_ids.each_with_index do |job_id, i|
+        new_job = Job.new
+        new_job.submit_job_id = job_id.to_i
+        new_job.script_path = gstore_job_script_paths[i]
+        new_job.next_dataset_id = @next_dataset_id
+        new_job.save
+        new_job.data_set.jobs << new_job
+        new_job.data_set.save
       end
     end
     copy_nextdataset
