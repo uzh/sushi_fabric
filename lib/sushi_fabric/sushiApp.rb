@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20200724-111508'
+# Version = '20200724-120813'
 
 require 'csv'
 require 'fileutils'
@@ -448,6 +448,13 @@ cd $SCRATCH_DIR || exit 1
   end
   def job_footer
     @out.print "#### JOB IS DONE WE PUT THINGS IN PLACE AND CLEAN AUP\n"
+    if File.exist?("/usr/local/ngseq/miniconda3/etc/profile.d/conda.sh")
+      @out.print <<-EOS
+. "/usr/local/ngseq/miniconda3/etc/profile.d/conda.sh"
+conda activate sushi
+      EOS
+    end
+
     if @output_files
       @output_files.map{|header| next_dataset[header]}.each do |file|
         # in actual case, to save under /srv/gstore/
