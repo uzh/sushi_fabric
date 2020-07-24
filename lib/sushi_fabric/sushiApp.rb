@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20200723-132451'
+# Version = '20200724-111508'
 
 require 'csv'
 require 'fileutils'
@@ -795,7 +795,6 @@ rm -rf #{@scratch_dir} || exit 1
             if next_dataset.workunit_id
               @job_scripts.each do |job_script|
                 open(job_script, "a") do |out|
-                  out.puts "module load Dev/Python"
                   out.puts "WORKUNIT_ID=#{next_dataset.workunit_id}"
                   out.puts "update_resource_size -w $WORKUNIT_ID"
                 end
