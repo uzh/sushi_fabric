@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20200724-120813'
+# Version = '20201105-115625'
 
 require 'csv'
 require 'fileutils'
@@ -390,16 +390,18 @@ class SushiApp
     FileUtils.mkdir_p(@scratch_result_dir)
     FileUtils.mkdir_p(@job_script_dir)
   end
-  def check_latest_module_version(mod)
-    command_out =  %x[ bash -lc "source #{@module_source}; module whatis #{mod} 2>&1" ]
-    latest_mod = nil
-    command_out.split("\n").each do |line|
-      if line =~ /#{mod}/
-        latest_mod = line.split.first
-        break
+  def check_latest_modules_version(modules)
+    command_out =  %x[ bash -lc "source #{@module_source}; module whatis #{modules.join(" ")} 2>&1" | cut -f 1 -d " " | sort | uniq ]
+    latest_modules = []
+    command_out.split("\n").each do |line_|
+      line = line_.chomp
+      unless line.empty?
+        if line =~ /#{modules.join("|")}/
+          latest_modules << line
+        end
       end
     end
-    latest_mod
+    latest_modules
   end
   def job_header
     @scratch_dir = if @params['process_mode'] == 'SAMPLE'
@@ -419,9 +421,17 @@ class SushiApp
                        ""
                      end
     module_add_commands = if @modules and !@modules.empty?
-                            modules_with_version = @modules.map{|mod| check_latest_module_version(mod)}
-                            modules_with_version.compact!
-                            "module add #{modules_with_version.join(' ')}"
+                            modules_with_version = check_latest_modules_version(@modules)
+                            if @modules.length == modules_with_version.length
+                              modules_with_version.compact!
+                              "module add #{modules_with_version.join(' ')}"
+                            else
+                              @logger.error("#"*100)
+                              @logger.error("# Error in checking modules ")
+                              @logger.error("# Please check if all modules are correctly installed, searched #{@modules.join(",")} but only detected #{modules_with_version.join(",")}")
+                              @logger.error("#"*100)
+                              "exit # Please check if all modules are correctly installed, searched #{@modules.join(",")} but only detected #{modules_with_version.join(",")}"
+                            end
                           else
                             ""
                           end
