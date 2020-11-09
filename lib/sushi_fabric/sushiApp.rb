@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20201105-115625'
+# Version = '20201109-225541'
 
 require 'csv'
 require 'fileutils'
@@ -391,7 +391,7 @@ class SushiApp
     FileUtils.mkdir_p(@job_script_dir)
   end
   def check_latest_modules_version(modules)
-    command_out =  %x[ bash -lc "source #{@module_source}; module whatis #{modules.join(" ")} 2>&1" | cut -f 1 -d " " | sort | uniq ]
+    command_out =  %x[ bash -lc "source #{@module_source}; module whatis #{modules.join(" ")} 2>&1" | cut -f 1 -d " " | uniq ]
     latest_modules = []
     command_out.split("\n").each do |line_|
       line = line_.chomp
