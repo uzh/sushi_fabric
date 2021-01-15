@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20201218-155451'
+# Version = '20210115-105702'
 
 require 'csv'
 require 'fileutils'
@@ -864,17 +864,7 @@ rm -rf #{@scratch_dir} || exit 1
     save_parameters_as_tsv
     save_input_dataset_as_tsv
 
-    if SushiFabric::Application.config.fgcz?
-      # this causes sqlite3 IO error in Mac OSX (Yosemite)
-      pid = Process.fork do
-        Process.fork do
-          main
-        end # grand-child process
-      end # child process
-      Process.waitpid pid
-    else
-      main
-    end
+    main
   end
   def make_dummy_files
     dummy_files_header = []
