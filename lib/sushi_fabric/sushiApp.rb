@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20210115-105702'
+# Version = '20210121-101344'
 
 require 'csv'
 require 'fileutils'
@@ -411,8 +411,8 @@ class SushiApp
                      @scratch_result_dir + '_temp$$'
                    end
     hold_jid_option = if @dataset_sushi_id and parent_data_set = DataSet.find_by_id(@dataset_sushi_id.to_i) and !parent_data_set.jobs.empty?
-                                parent_data_set_job_ids = parent_data_set.jobs.map{|job| job.submit_job_id}.join(",")
-                                "#\$ -hold_jid #{parent_data_set_job_ids}"
+                                parent_data_set_job_ids = parent_data_set.jobs.map{|job| job.submit_job_id}.join(":")
+                                "#SBATCH --dependency=afterany:#{parent_data_set_job_ids}"
                               else
                                 ''
                               end
