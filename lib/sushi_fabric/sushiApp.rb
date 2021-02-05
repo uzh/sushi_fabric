@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20210121-101344'
+# Version = '20210205-155336'
 
 require 'csv'
 require 'fileutils'
@@ -228,6 +228,8 @@ class SushiApp
   attr_accessor :input_dataset_bfabric_application_number
   attr_accessor :next_dataset_bfabric_application_number
   attr_reader :inactivate_nodes
+  attr_reader :employee
+
   def initialize
     @gstore_dir = GSTORE_DIR
     @project = nil
