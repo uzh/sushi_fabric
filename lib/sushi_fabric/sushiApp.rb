@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20210205-155336'
+# Version = '20210211-145021'
 
 require 'csv'
 require 'fileutils'
@@ -412,12 +412,11 @@ class SushiApp
                    else
                      @scratch_result_dir + '_temp$$'
                    end
-    hold_jid_option = if @dataset_sushi_id and parent_data_set = DataSet.find_by_id(@dataset_sushi_id.to_i) and !parent_data_set.jobs.empty?
-                                parent_data_set_job_ids = parent_data_set.jobs.map{|job| job.submit_job_id}.join(":")
-                                "#SBATCH --dependency=afterany:#{parent_data_set_job_ids}"
-                              else
-                                ''
-                              end
+    hold_jid_option = if @dataset_sushi_id and parent_data_set = DataSet.find_by_id(@dataset_sushi_id.to_i) and !parent_data_set.jobs.empty? and parent_data_set_job_ids = parent_data_set.jobs.map{|job| job.submit_job_id} and !parent_data_set_job_ids.join.empty?
+                        "#SBATCH --dependency=afterany:#{parent_data_set_job_ids.join(":")}"
+                      else
+                        ''
+                      end
     module_src_command = if @module_source and @modules and !@modules.empty?
                        "source #{@module_source}"
                      else
