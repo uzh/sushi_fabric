@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20210211-145021'
+# Version = '20210304-164250'
 
 require 'csv'
 require 'fileutils'
@@ -467,12 +467,27 @@ conda activate sushi
       EOS
     end
 
+    src_files = []
+    dest_dirs = []
+    greq = (copy_commands("AAA", "BBB").join =~ /g-req/)
     if @output_files
       @output_files.map{|header| next_dataset[header]}.each do |file|
-        # in actual case, to save under /srv/gstore/
         src_file = File.basename(file)
         dest_dir = File.dirname(File.join(@gstore_dir, file))
+        src_files << src_file
+        dest_dirs << dest_dir
+      end
+      if dest_dirs.uniq.length == 1 and greq
+        src_file = src_files.join(" ")
+        dest_dir = dest_dirs.first
         @out.print copy_commands(src_file, dest_dir).join("\n"), "\n"
+      else
+        @output_files.map{|header| next_dataset[header]}.each do |file|
+          # in actual case, to save under /srv/gstore/
+          src_file = File.basename(file)
+          dest_dir = File.dirname(File.join(@gstore_dir, file))
+          @out.print copy_commands(src_file, dest_dir).join("\n"), "\n"
+        end
       end
     end
     @out.print <<-EOF
