@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20210304-164250'
+# Version = '20210410-141359'
 
 require 'csv'
 require 'fileutils'
@@ -432,7 +432,8 @@ class SushiApp
                               @logger.error("# Error in checking modules ")
                               @logger.error("# Please check if all modules are correctly installed, searched #{@modules.join(",")} but only detected #{modules_with_version.join(",")}")
                               @logger.error("#"*100)
-                              "exit # Please check if all modules are correctly installed, searched #{@modules.join(",")} but only detected #{modules_with_version.join(",")}"
+                              # "exit # Please check if all modules are correctly installed, searched #{@modules.join(",")} but only detected #{modules_with_version.join(",")}"
+                              ""
                             end
                           else
                             ""
