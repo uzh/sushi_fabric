@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20210813-192118'
+# Version = '20211015-142855'
 
 require 'csv'
 require 'fileutils'
@@ -20,6 +20,7 @@ module SushiFabric
     config.scratch_dir = '/tmp/scratch'
     config.module_source = nil
     config.course_mode = nil
+    config.rails_host = nil
   end
 
   # load custmized parameters if there is
@@ -41,6 +42,7 @@ module SushiFabric
     config.scratch_dir = '/tmp/scratch'
     config.module_source = nil
     config.course_mode = nil
+    config.rails_host = nil
   end
 end
       EOF
@@ -53,7 +55,7 @@ end
   SUSHI_APP_DIR = config.sushi_app_dir
   SCRATCH_DIR = config.scratch_dir
   MODULE_SOURCE = config.module_source
-  
+  RAILS_HOST = config.rails_host 
   unless File.exist?(GSTORE_DIR)
     FileUtils.mkdir_p GSTORE_DIR
   end
@@ -524,7 +526,7 @@ rm -rf #{@scratch_dir} || exit 1
     job_id = 0
     begin
       #job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
-      job_id = @workflow_manager.start_monitoring3(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id)
+      job_id = @workflow_manager.start_monitoring3(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
     rescue => e
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
       @logger.error("*"*50)
