@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20211015-142855'
+# Version = '20211104-160141'
 
 require 'csv'
 require 'fileutils'
@@ -240,8 +240,6 @@ class SushiApp
     @params['cores'] = nil
     @params['ram'] = nil
     @params['scratch'] = nil
-    @params['node'] = ''
-    @params['queue'] = ''
     @params['partition'] = ''
     @params['process_mode'] = 'SAMPLE'
     @params['samples'] = ''
@@ -517,6 +515,7 @@ rm -rf #{@scratch_dir} || exit 1
     gsub_options << "-p #{@params['partition']}" unless @params['partition'].to_s.empty?
     gsub_options << "-r #{@params['ram']}" unless @params['ram'].to_s.empty?
     gsub_options << "-s #{@params['scratch']}" unless @params['scratch'].to_s.empty?
+    gsub_options << "-i #{@params['nice']}" unless @params['nice'].to_s.empty?
     command = "wfm_monitoring --server #{WORKFLOW_MANAGER} --user #{@user} --project #{@project.gsub(/p/,'')} --logdir #{@gstore_script_dir} #{job_script} #{gsub_options.join(' ')}"
     puts "submit: #{command}"
 
