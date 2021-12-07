@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20211104-160141'
+# Version = '20211207-151042'
 
 require 'csv'
 require 'fileutils'
@@ -384,14 +384,23 @@ class SushiApp
     @result_dir = File.join(@project, @result_dir_base)
     @scratch_result_dir = File.join(SCRATCH_DIR, @result_dir_base)
     @job_script_dir = File.join(@scratch_result_dir, 'scripts')
+    @uploaded_files_dir = File.join(@scratch_result_dir, 'uploaded')
     @gstore_result_dir = File.join(@gstore_dir, @result_dir)
     @gstore_script_dir = File.join(@gstore_result_dir, 'scripts')
     @gstore_project_dir = File.join(@gstore_dir, @project)
+    @gstore_uploaded_dir = File.join(@gstore_result_dir, 'uploaded')
     set_file_paths
   end
   def prepare_result_dir
     FileUtils.mkdir_p(@scratch_result_dir)
     FileUtils.mkdir_p(@job_script_dir)
+    @uploaded_files = []
+    @params.each do |key, value|
+      if @params[key, 'file_upload']
+        FileUtils.mkdir_p(@uploaded_files_dir)
+        @uploaded_files << value
+      end
+    end
   end
   def check_latest_modules_version(modules)
     command_out =  %x[ bash -lc "source #{@module_source}; module whatis #{modules.join(" ")} 2>&1" | cut -f 1 -d " " | uniq ]
@@ -577,7 +586,12 @@ rm -rf #{@scratch_dir} || exit 1
     CSV.open(file_path, 'w', :col_sep=>"\t") do |out|
       out << ["sushi_app", self.class.name]
       @output_params.each do |key, value|
-        out << [key, value]
+        if @output_params[key, 'file_upload']
+          uploaded_file_path = File.join(@gstore_uploaded_dir, File.basename(value))
+          out << [key, uploaded_file_path]
+        else
+          out << [key, value]
+        end
       end
     end
     file_path
@@ -628,6 +642,18 @@ rm -rf #{@scratch_dir} || exit 1
       retry if cnt_retry < 3
     end
     com
+  end
+  def copy_uploaded_files
+    if not @uploaded_files.empty?
+      @uploaded_files.each do |file|
+        FileUtils.cp(file, @uploaded_files_dir)
+        command = "cp #{file} #{@uploaded_files_dir}"
+        puts command
+        FileUtils.rm_r(File.dirname(file))
+        command = "rm -rf #{File.dirname(file)}"
+        puts command
+      end
+    end
   end
   def copy_inputdataset_parameter_jobscripts
     org = @scratch_result_dir
@@ -841,6 +867,7 @@ rm -rf #{@scratch_dir} || exit 1
         end
       end
     end
+    copy_uploaded_files
     copy_inputdataset_parameter_jobscripts
 
     # job submittion
