@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20211207-151042'
+# Version = '20211209-162918'
 
 require 'csv'
 require 'fileutils'
@@ -587,8 +587,9 @@ rm -rf #{@scratch_dir} || exit 1
       out << ["sushi_app", self.class.name]
       @output_params.each do |key, value|
         if @output_params[key, 'file_upload']
-          uploaded_file_path = File.join(@gstore_uploaded_dir, File.basename(value))
+          uploaded_file_path = File.join(@result_dir, "uploaded", File.basename(value))
           out << [key, uploaded_file_path]
+          @params[key] = uploaded_file_path
         else
           out << [key, value]
         end
