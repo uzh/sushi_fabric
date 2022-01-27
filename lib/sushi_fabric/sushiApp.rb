@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20211209-162918'
+# Version = '20220127-101054'
 
 require 'csv'
 require 'fileutils'
@@ -590,6 +590,7 @@ rm -rf #{@scratch_dir} || exit 1
           uploaded_file_path = File.join(@result_dir, "uploaded", File.basename(value))
           out << [key, uploaded_file_path]
           @params[key] = uploaded_file_path
+          @output_params[key] = uploaded_file_path
         else
           out << [key, value]
         end
@@ -806,6 +807,12 @@ rm -rf #{@scratch_dir} || exit 1
       data_set.id
     end
   end
+  def save_parameters_in_sushi_db
+    if @next_dataset_id and next_dataset = DataSet.find_by_id(@next_dataset_id)
+      next_dataset.job_parameters = @output_params
+      next_dataset.save
+    end
+  end
   def main(mock=false)
     ## sushi writes creates the job scripts and builds the result data set that is to be generated
     @result_dataset = []
@@ -852,6 +859,7 @@ rm -rf #{@scratch_dir} || exit 1
       unless NO_ROR
         @current_user ||= nil
         @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user, @child)
+        save_parameters_in_sushi_db
 
         unless @off_bfabric_registration
           if next_dataset = DataSet.find_by_id(@next_dataset_id)
