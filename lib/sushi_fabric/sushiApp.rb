@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20220127-101054'
+# Version = '20220207-142315'
 
 require 'csv'
 require 'fileutils'
@@ -116,7 +116,11 @@ class ::Hash
     if v
       @defaults[k] = v
     else
-      @defaults[k]
+      if @defaults
+        @defaults[k]
+      else
+        ""
+      end
     end
   end
   def data_type(k)
@@ -252,7 +256,7 @@ class SushiApp
   end
   def set_input_dataset
     if @dataset_tsv_file
-      dataset_tsv = CSV.readlines(@dataset_tsv_file, {:headers=>true, :col_sep=>"\t"})
+      dataset_tsv = CSV.readlines(@dataset_tsv_file, :headers=>true, :col_sep=>"\t")
       @dataset_hash = []
       @dataset = []
       dataset_tsv.each do |row|
