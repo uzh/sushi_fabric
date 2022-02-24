@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20220217-160253'
+# Version = '20220224-141635'
 
 require 'csv'
 require 'fileutils'
@@ -813,6 +813,7 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def save_parameters_in_sushi_db
     if @next_dataset_id and next_dataset = DataSet.find_by_id(@next_dataset_id)
+      @output_params['sushi_app'] = self.class
       next_dataset.job_parameters = @output_params
       next_dataset.save
     end
