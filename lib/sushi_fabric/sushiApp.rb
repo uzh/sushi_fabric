@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20220224-141635'
+# Version = '20230404-132741'
 
 require 'csv'
 require 'fileutils'
@@ -852,7 +852,12 @@ rm -rf #{@scratch_dir} || exit 1
                           else
                             "#{@name.gsub(/\s/,'').gsub(/_/,'')}_#{dataset.id}"
                           end
-      data_set_arr = {'DataSetName'=>next_dataset_name, 'ProjectNumber'=>@project.gsub(/p/,''), 'ParentID'=>@dataset_sushi_id, 'Comment'=>@next_dataset_comment.to_s}
+      data_set_arr = if @params['next_dataset_root']
+                       {'DataSetName'=>next_dataset_name, 'ProjectNumber'=>@project.gsub(/p/,''), 'Comment'=>@next_dataset_comment.to_s}
+                     else
+                       {'DataSetName'=>next_dataset_name, 'ProjectNumber'=>@project.gsub(/p/,''), 'ParentID'=>@dataset_sushi_id, 'Comment'=>@next_dataset_comment.to_s}
+                     end
+
       csv = CSV.readlines(@next_dataset_tsv_path, :col_sep=>"\t")
       csv.each do |row|
         if headers.empty?
