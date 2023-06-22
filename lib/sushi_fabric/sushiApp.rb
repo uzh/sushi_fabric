@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20230404-132741'
+# Version = '20230622-143640'
 
 require 'csv'
 require 'fileutils'
@@ -349,7 +349,7 @@ class SushiApp
   end
   def check_application_parameters
     if @required_params and (@required_params - @params.keys).empty?
-      @output_params = @params.clone
+      @output_params = {"sushi_app" => self.class}.merge(@params.clone)
     end
   end
   def set_user_parameters
@@ -588,9 +588,8 @@ rm -rf #{@scratch_dir} || exit 1
   def save_parameters_as_tsv
     file_path = File.join(@scratch_result_dir, @parameter_file)
     CSV.open(file_path, 'w', :col_sep=>"\t") do |out|
-      out << ["sushi_app", self.class.name]
       @output_params.each do |key, value|
-        if @output_params[key, 'file_upload']
+        if @output_params[key, 'file_upload'] and !value.to_s.empty?
           uploaded_file_path = File.join(@result_dir, "uploaded", File.basename(value))
           out << [key, uploaded_file_path]
           @params[key] = uploaded_file_path
@@ -651,7 +650,7 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def copy_uploaded_files
     if not @uploaded_files.empty?
-      @uploaded_files.each do |file|
+      @uploaded_files.compact.select{|file| !file.empty?}.each do |file|
         FileUtils.cp(file, @uploaded_files_dir)
         command = "cp #{file} #{@uploaded_files_dir}"
         puts command
@@ -813,7 +812,6 @@ rm -rf #{@scratch_dir} || exit 1
   end
   def save_parameters_in_sushi_db
     if @next_dataset_id and next_dataset = DataSet.find_by_id(@next_dataset_id)
-      @output_params['sushi_app'] = self.class
       next_dataset.job_parameters = @output_params
       next_dataset.save
     end
