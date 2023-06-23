@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20230622-143640'
+# Version = '20230623-165238'
 
 require 'csv'
 require 'fileutils'
@@ -349,7 +349,7 @@ class SushiApp
   end
   def check_application_parameters
     if @required_params and (@required_params - @params.keys).empty?
-      @output_params = {"sushi_app" => self.class}.merge(@params.clone)
+      @output_params = {"sushi_app" => self.class.name}.merge(@params.clone)
     end
   end
   def set_user_parameters
