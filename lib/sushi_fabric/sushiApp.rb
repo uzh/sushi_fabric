@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20230623-175030'
+# Version = '20231208-144616'
 
 require 'csv'
 require 'fileutils'
@@ -233,6 +233,7 @@ class SushiApp
   attr_accessor :next_dataset_bfabric_application_number
   attr_reader :inactivate_nodes
   attr_reader :employee
+  attr_accessor :queue
 
   def initialize
     @gstore_dir = GSTORE_DIR
@@ -496,13 +497,13 @@ conda activate sushi
       if dest_dirs.uniq.length == 1 and greq
         src_file = src_files.join(" ")
         dest_dir = dest_dirs.first
-        @out.print copy_commands(src_file, dest_dir).join("\n"), "\n"
+        @out.print copy_commands(src_file, dest_dir, nil, @queue).join("\n"), "\n"
       else
         @output_files.map{|header| next_dataset[header]}.each do |file|
           # in actual case, to save under /srv/gstore/
           src_file = File.basename(file)
           dest_dir = File.dirname(File.join(@gstore_dir, file))
-          @out.print copy_commands(src_file, dest_dir).join("\n"), "\n"
+          @out.print copy_commands(src_file, dest_dir, nil, @queue).join("\n"), "\n"
         end
       end
     end
@@ -632,12 +633,12 @@ rm -rf #{@scratch_dir} || exit 1
     end
     file_path
   end
-  def copy_commands(org_dir, dest_parent_dir, now=nil)
+  def copy_commands(org_dir, dest_parent_dir, now=nil, queue="light")
     @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
     com = ''
     cnt_retry = 0
     begin
-      com = @workflow_manager.copy_commands(org_dir, dest_parent_dir, now)
+      com = @workflow_manager.copy_commands(org_dir, dest_parent_dir, now, queue)
     rescue => e
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
       @logger.error("*"*50)
