@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20231208-144616'
+# Version = '20240723-154553'
 
 require 'csv'
 require 'fileutils'
@@ -872,20 +872,6 @@ rm -rf #{@scratch_dir} || exit 1
         @current_user ||= nil
         @next_dataset_id = save_data_set(data_set_arr.to_a.flatten, headers, rows, @current_user, @child)
         save_parameters_in_sushi_db
-
-        unless @off_bfabric_registration
-          if next_dataset = DataSet.find_by_id(@next_dataset_id)
-            next_dataset.register_bfabric(bfabric_application_number: @next_dataset_bfabric_application_number)
-            if next_dataset.workunit_id
-              @job_scripts.each do |job_script|
-                open(job_script, "a") do |out|
-                  out.puts "WORKUNIT_ID=#{next_dataset.workunit_id}"
-                  out.puts "update_resource_size -w $WORKUNIT_ID"
-                end
-              end
-            end
-          end
-        end
       end
     end
     copy_uploaded_files
