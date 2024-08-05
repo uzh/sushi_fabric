@@ -729,7 +729,12 @@ rm -rf #{@scratch_dir} || exit 1
     end
   end
   def dataset_mode
-    if @params['samples'] != ''
+    if @params['samples'] == ''
+      @dataset = []
+      @dataset_hash.each do |row|
+        @dataset << row
+      end
+    else
       selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
       # for a case of @dataset is used in def next_datast in SUSHIApp
       @dataset = []
