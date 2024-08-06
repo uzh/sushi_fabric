@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20240723-154553'
+# Version = '20240806-095335'
 
 require 'csv'
 require 'fileutils'
@@ -729,19 +729,16 @@ rm -rf #{@scratch_dir} || exit 1
     end
   end
   def dataset_mode
-    if @params['samples'] == ''
-      @dataset = []
-      @dataset_hash.each do |row|
+    selected_samples = unless @params['samples'].empty?
+                         Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
+                       else
+                         Hash[*@dataset_hash.map{|row| row['Name']}.map{|sample_name| [sample_name, true]}.flatten]
+                       end
+    # for a case of @dataset is used in def next_datast in SUSHIApp
+    @dataset = []
+    @dataset_hash.each do |row|
+      if selected_samples[row['Name']]
         @dataset << row
-      end
-    else
-      selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
-      # for a case of @dataset is used in def next_datast in SUSHIApp
-      @dataset = []
-      @dataset_hash.each do |row|
-        if selected_samples[row['Name']]
-          @dataset << row
-        end
       end
     end
     @job_script = if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
