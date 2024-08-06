@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20240806-095335'
+# Version = '20240806-113507'
 
 require 'csv'
 require 'fileutils'
@@ -711,7 +711,11 @@ rm -rf #{@scratch_dir} || exit 1
     @out.close
   end
   def sample_mode
-    selected_samples = Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
+    selected_samples = unless @params['samples'].empty?
+                         Hash[*@params['samples'].split(',').map{|sample_name| [sample_name, true]}.flatten]
+                       else
+                         Hash[*@dataset_hash.map{|row| row['Name']}.map{|sample_name| [sample_name, true]}.flatten]
+                       end
     @dataset_hash.each_with_index do |row, i|
       @dataset = Hash[*row.map{|key,value| [key.gsub(/\[.+\]/,'').strip, value]}.flatten]
       if selected_samples[@dataset['Name']]
