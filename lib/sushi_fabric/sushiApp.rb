@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20240823-112404'
+# Version = '20241108-111516'
 
 require 'csv'
 require 'fileutils'
@@ -178,21 +178,17 @@ def save_data_set(data_set_arr, headers, rows, user=nil)
       end
       sample = Sample.new
       sample.key_value = sample_hash.to_s
-      sample.save unless sample.saved?
+      sample.save # skip exact-match search
       data_set.samples << sample
     end
 
     data_set.md5 = data_set.md5hexdigest
-    unless data_set.saved?
-      project.data_sets << data_set
-      parent_data_set.data_sets << data_set if parent_data_set
-      data_set.save
-      if user
-        user.data_sets << data_set
-        user.save
-      end
-    else
-      headers[0] = DataSet.find_by_md5(data_set.md5)
+    project.data_sets << data_set
+    parent_data_set.data_sets << data_set if parent_data_set
+    data_set.save
+    if user
+      user.data_sets << data_set
+      user.save
     end
     data_set.id
   end
@@ -794,7 +790,7 @@ rm -rf #{@scratch_dir} || exit 1
         end
         sample = Sample.new
         sample.key_value = sample_hash.to_s
-        sample.save unless sample.saved?
+        sample.save # skip exact-match search
         data_set.samples << sample
       end
 
@@ -803,16 +799,12 @@ rm -rf #{@scratch_dir} || exit 1
       end
 
       data_set.md5 = data_set.md5hexdigest
-      unless data_set.saved?
-        project.data_sets << data_set
-        parent_data_set.data_sets << data_set if parent_data_set
-        data_set.save
-        if user
-          user.data_sets << data_set
-          user.save
-        end
-      else
-        headers[0] = DataSet.find_by_md5(data_set.md5)
+      project.data_sets << data_set
+      parent_data_set.data_sets << data_set if parent_data_set
+      data_set.save
+      if user
+        user.data_sets << data_set
+        user.save
       end
       data_set.id
     end
