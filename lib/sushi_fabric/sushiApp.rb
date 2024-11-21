@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241108-111516'
+# Version = '20241121-112242'
 
 require 'csv'
 require 'fileutils'
@@ -178,18 +178,24 @@ def save_data_set(data_set_arr, headers, rows, user=nil)
       end
       sample = Sample.new
       sample.key_value = sample_hash.to_s
-      sample.save # skip exact-match search
       data_set.samples << sample
     end
 
     data_set.md5 = data_set.md5hexdigest
-    project.data_sets << data_set
-    parent_data_set.data_sets << data_set if parent_data_set
-    data_set.save
-    if user
-      user.data_sets << data_set
-      user.save
-    end
+		if data_set_ = DataSet.find_by_md5(data_set.md5) and data_set_.project_id == data_set.project_id
+			data_set = data_set_
+		else
+			data_set.samples.each do |sample|
+				sample.save
+			end
+			project.data_sets << data_set
+			parent_data_set.data_sets << data_set if parent_data_set
+			data_set.save
+			if user
+				user.data_sets << data_set
+				user.save
+			end
+		end
     data_set.id
   end
 end
@@ -790,7 +796,7 @@ rm -rf #{@scratch_dir} || exit 1
         end
         sample = Sample.new
         sample.key_value = sample_hash.to_s
-        sample.save # skip exact-match search
+        #sample.save # skip exact-match search
         data_set.samples << sample
       end
 
@@ -799,13 +805,20 @@ rm -rf #{@scratch_dir} || exit 1
       end
 
       data_set.md5 = data_set.md5hexdigest
-      project.data_sets << data_set
-      parent_data_set.data_sets << data_set if parent_data_set
-      data_set.save
-      if user
-        user.data_sets << data_set
-        user.save
-      end
+			if data_set_ = DataSet.find_by_md5(data_set.md5) and data_set_.project_id == data_set.project_id
+				data_set = data_set_
+			else
+				data_set.samples.each do |sample|
+					sample.save
+				end
+				project.data_sets << data_set
+				parent_data_set.data_sets << data_set if parent_data_set
+				data_set.save
+				if user
+					user.data_sets << data_set
+					user.save
+				end
+			end
       data_set.id
     end
   end
