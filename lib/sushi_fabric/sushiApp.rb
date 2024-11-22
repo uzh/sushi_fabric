@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241121-112242'
+# Version = '20241122-134036'
 
 require 'csv'
 require 'fileutils'
@@ -81,6 +81,8 @@ end
     require "#{SUSHI_APP_DIR}/app/models/data_set"
     require "#{SUSHI_APP_DIR}/app/models/sample"
     require "#{SUSHI_APP_DIR}/app/models/job"
+    require "#{SUSHI_APP_DIR}/app/jobs/application_job"
+    require "#{SUSHI_APP_DIR}/app/jobs/make_whole_tree_job"
   else
     NO_ROR = true
   end
@@ -854,6 +856,7 @@ rm -rf #{@scratch_dir} || exit 1
     @next_dataset_tsv_path = save_next_dataset_as_tsv
 
     if @dataset_sushi_id and dataset = DataSet.find_by_id(@dataset_sushi_id.to_i)
+      @project_id = dataset.project.id
       data_set_arr = []
       headers = []
       rows = []
@@ -911,6 +914,12 @@ rm -rf #{@scratch_dir} || exit 1
         new_job.data_set.jobs << new_job
         new_job.data_set.save
       end
+    end
+
+    # Update dataset tree
+    if @project_id
+      puts "# Update dataset tree by ActiveJob"
+      MakeWholeTreeJob.perform_later(@project_id)
     end
     copy_nextdataset
   end
