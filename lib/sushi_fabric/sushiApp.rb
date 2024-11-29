@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241128-163838'
+# Version = '20241129-152344'
 
 require 'csv'
 require 'fileutils'
@@ -542,9 +542,9 @@ rm -rf #{@scratch_dir} || exit 1
       #job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
       #job_id = @workflow_manager.start_monitoring3(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
       submit_command_, script_path, stdout_path, stderr_path = @workflow_manager.submit_job_command(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
-      p "##"
-      p "## [submit_command_, script_path, stdout_path, stderr_path] =  #{[submit_command_, script_path, stdout_path, stderr_path]}"
-      p "##"
+      # puts "##"
+      # puts "## [submit_command_, script_path, stdout_path, stderr_path] =  #{[submit_command_, script_path, stdout_path, stderr_path]}"
+      # puts "##"
     rescue => e
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
       @logger.error("*"*50)
@@ -554,23 +554,25 @@ rm -rf #{@scratch_dir} || exit 1
       @logger.error("*"*50)
     end
     job_id
+    [submit_command_, script_path, stdout_path, stderr_path]
   end
   def submit(job_script, mock=false)
     begin
-      job_id = unless mock
-                 i = submit_command(job_script)
-                 i.to_i
-               else
-                 #Time.now.to_f.to_s.gsub('.', '')
-                 1234
-               end
-      unless job_id.to_i > 1
-        @logger.error("#"*50)
-        time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-        @logger.error("error happened in job submitting, but maybe fine. #{time}")
-        @logger.error("#"*50)
-        job_id = nil
-      end
+      #job_id = unless mock
+      #           i = submit_command(job_script)
+      #           i.to_i
+      #         else
+      #           #Time.now.to_f.to_s.gsub('.', '')
+      #           1234
+      #         end
+      #unless job_id.to_i > 1
+      #  @logger.error("#"*50)
+      #  time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
+      #  @logger.error("error happened in job submitting, but maybe fine. #{time}")
+      #  @logger.error("#"*50)
+      #  job_id = nil
+      #end
+      submit_command, script_path, stdout_path, stderr_path = submit_command(job_script)
     rescue
       @logger.error("@"*50)
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
@@ -579,6 +581,7 @@ rm -rf #{@scratch_dir} || exit 1
       job_id = nil
     end
     job_id
+    [submit_command, script_path, stdout_path, stderr_path]
   end
   def preprocess
     # this should be overwritten in a subclass
@@ -894,12 +897,16 @@ rm -rf #{@scratch_dir} || exit 1
 
     # job submittion
     gstore_job_script_paths = []
+    submit_jobs = []
     @job_scripts.each_with_index do |job_script, i|
-      if job_id = submit(job_script, mock)
-        @job_ids << job_id
-        print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
-        gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
-      end
+      #if job_id = submit(job_script, mock)
+      #  @job_ids << job_id
+      #  print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
+      #  gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
+      #end
+      submit_command, script_path, stdout_path, stderr_path = submit(job_script, mock)
+      submit_jobs << [submit_command, script_path, stdout_path, stderr_path]
+      gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
     end
 
     puts
@@ -907,12 +914,24 @@ rm -rf #{@scratch_dir} || exit 1
     p @job_scripts
 
 
-    unless @job_ids.empty? or NO_ROR
+    #unless @job_ids.empty? or NO_ROR
+    unless submit_jobs.empty?
       # save job and dataset relation in Sushi DB
-      job_ids.each_with_index do |job_id, i|
+      #job_ids.each_with_index do |job_id, i|
+      submit_jobs.each do |submit_command, script_path, stdout_path, stderr_path|
+        puts "##"
+        puts "# submit_command: #{submit_command}"
+        puts "# script_path: #{script_path}"
+        puts "# stdout_path: #{stdout_path}"
+        puts "# stderr_path: #{stderr_path}"
+        puts "##"
         new_job = Job.new
-        new_job.submit_job_id = job_id.to_i
-        new_job.script_path = gstore_job_script_paths[i]
+        #new_job.submit_job_id = job_id.to_i
+        #new_job.script_path = gstore_job_script_paths[i]
+        new_job.script_path = script_path
+        new_job.submit_command = submit_command
+        new_job.stdout_path = stdout_path
+        new_job.stderr_path = stderr_path
         new_job.next_dataset_id = @next_dataset_id
         new_job.save
         new_job.data_set.jobs << new_job
