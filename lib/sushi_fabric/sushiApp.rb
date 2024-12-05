@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241129-152344'
+# Version = '20241205-131410'
 
 require 'csv'
 require 'fileutils'
@@ -542,9 +542,9 @@ rm -rf #{@scratch_dir} || exit 1
       #job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
       #job_id = @workflow_manager.start_monitoring3(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
       submit_command_, script_path, stdout_path, stderr_path = @workflow_manager.submit_job_command(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
-      # puts "##"
-      # puts "## [submit_command_, script_path, stdout_path, stderr_path] =  #{[submit_command_, script_path, stdout_path, stderr_path]}"
-      # puts "##"
+      # puts "##"
+      # puts "## [submit_command_, script_path, stdout_path, stderr_path] =  #{[submit_command_, script_path, stdout_path, stderr_path]}"
+      # puts "##"
     rescue => e
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
       @logger.error("*"*50)
@@ -572,7 +572,7 @@ rm -rf #{@scratch_dir} || exit 1
       #  @logger.error("#"*50)
       #  job_id = nil
       #end
-      submit_command, script_path, stdout_path, stderr_path = submit_command(job_script)
+      submit_command_, script_path, stdout_path, stderr_path = submit_command(job_script)
     rescue
       @logger.error("@"*50)
       time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
@@ -581,7 +581,7 @@ rm -rf #{@scratch_dir} || exit 1
       job_id = nil
     end
     job_id
-    [submit_command, script_path, stdout_path, stderr_path]
+    [submit_command_, script_path, stdout_path, stderr_path]
   end
   def preprocess
     # this should be overwritten in a subclass
