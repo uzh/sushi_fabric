@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241205-131410'
+# Version = '20241205-150115'
 
 require 'csv'
 require 'fileutils'
@@ -523,65 +523,48 @@ rm -rf #{@scratch_dir} || exit 1
   def commands
     # this should be overwritten in a subclass
   end
-  def submit_command(job_script)
-    gsub_options = []
-    gsub_options << "-c #{@params['cores']}" unless @params['cores'].to_s.empty?
-    gsub_options << "-n #{@params['node']}" unless @params['node'].to_s.empty?
-    gsub_options << "-p #{@params['partition']}" unless @params['partition'].to_s.empty?
-    gsub_options << "-r #{@params['ram']}" unless @params['ram'].to_s.empty?
-    gsub_options << "-s #{@params['scratch']}" unless @params['scratch'].to_s.empty?
-    gsub_options << "-i #{@params['nice']}" unless @params['nice'].to_s.empty?
-    command = "wfm_monitoring --server #{WORKFLOW_MANAGER} --user #{@user} --project #{@project.gsub(/p/,'')} --logdir #{@gstore_script_dir} #{job_script} #{gsub_options.join(' ')}"
-    puts "submit: #{command}"
-
-    project_number = @project.gsub(/p/, '')
-    @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
-    script_content = File.read(job_script)
-    job_id = 0
-    begin
-      #job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
-      #job_id = @workflow_manager.start_monitoring3(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
-      submit_command_, script_path, stdout_path, stderr_path = @workflow_manager.submit_job_command(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
-      # puts "##"
-      # puts "## [submit_command_, script_path, stdout_path, stderr_path] =  #{[submit_command_, script_path, stdout_path, stderr_path]}"
-      # puts "##"
-    rescue => e
-      time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-      @logger.error("*"*50)
-      @logger.error("submit_command error #{time}")
-      @logger.error("error: #{e}")
-      @logger.error("job_script: #{job_script}, @user: #{@user}, script_content: #{script_content.class} #{script_content.to_s.length} chrs, project_number: #{project_number}, gsub_options: #{gsub_options}, job_id: #{job_id}")
-      @logger.error("*"*50)
+  def generate_new_job_script(script_name, script_content)
+    @log_dir = "/misc/fgcz01/sushi/test_workflow_manager_by_masa_on_fgcz-h-037/logs"
+    new_job_script = File.basename(script_name) + "_" + Time.now.strftime("%Y%m%d%H%M%S%L")
+    new_job_script = File.join(@log_dir, new_job_script)
+    open(new_job_script, 'w') do |out|
+      out.print script_content
+      out.print "\necho __SCRIPT END__\n"
     end
-    job_id
-    [submit_command_, script_path, stdout_path, stderr_path]
+    new_job_script
   end
-  def submit(job_script, mock=false)
-    begin
-      #job_id = unless mock
-      #           i = submit_command(job_script)
-      #           i.to_i
-      #         else
-      #           #Time.now.to_f.to_s.gsub('.', '')
-      #           1234
-      #         end
-      #unless job_id.to_i > 1
-      #  @logger.error("#"*50)
-      #  time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-      #  @logger.error("error happened in job submitting, but maybe fine. #{time}")
-      #  @logger.error("#"*50)
-      #  job_id = nil
-      #end
-      submit_command_, script_path, stdout_path, stderr_path = submit_command(job_script)
-    rescue
-      @logger.error("@"*50)
-      time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-      @logger.error("error happened in job submitting, but maybe fine. #{time}")
-      @logger.error("@"*50)
-      job_id = nil
+  def submit_job_command(script_file, script_content, option='')
+    if script_name = File.basename(script_file) and script_name =~ /\.sh/
+      script_name = script_name.split(/\.sh/).first + ".sh"
+      new_job_script = generate_new_job_script(script_name, script_content)
+      new_job_script_base = File.basename(new_job_script)
+      log_file = File.join(@log_dir, new_job_script_base + "_o.log")
+      err_file = File.join(@log_dir, new_job_script_base + "_e.log")
+      command = "sbatch -o #{log_file} -e #{err_file} -N 1 #{option} #{new_job_script}"
+      [command, new_job_script, log_file, err_file]
+    else
+      err_msg = "submit_job_command, ERROR: script_name is not *.sh: #{File.basename(script_file)}"
+      warn err_msg
+      raise err_msg
     end
-    job_id
-    [submit_command_, script_path, stdout_path, stderr_path]
+  end
+  def submit(script_path, mock=false)
+    sbatch_options = []
+    sbatch_options << "--mem=#{@params['ram']}G" unless @params['ram'].to_s.empty?
+    sbatch_options << "-n #{@params['cores']}" unless @params['cores'].to_s.empty?
+    sbatch_options << "--gres=scratch:#{@params['scratch']}" unless @params['scratch'].to_s.empty?
+    sbatch_options << "-p #{@params['partition']}" unless @params['partition'].to_s.empty?
+    sbatch_options << "--nice=#{@params['nice']}" unless @params['nice'].to_s.empty?
+
+    script_content = File.read(script_path)
+
+    submit_command, new_script_path, stdout_path, stderr_path = submit_job_command(script_path, script_content, sbatch_options.join(' '))
+
+    puts "##"
+    puts "## [submit_command, new_script_path, stdout_path, stderr_path] =  #{[submit_command, script_path, stdout_path, stderr_path]}"
+    puts "##"
+
+    [submit_command, new_script_path, stdout_path, stderr_path]
   end
   def preprocess
     # this should be overwritten in a subclass
@@ -899,11 +882,6 @@ rm -rf #{@scratch_dir} || exit 1
     gstore_job_script_paths = []
     submit_jobs = []
     @job_scripts.each_with_index do |job_script, i|
-      #if job_id = submit(job_script, mock)
-      #  @job_ids << job_id
-      #  print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
-      #  gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
-      #end
       submit_command, script_path, stdout_path, stderr_path = submit(job_script, mock)
       submit_jobs << [submit_command, script_path, stdout_path, stderr_path]
       gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
@@ -926,8 +904,6 @@ rm -rf #{@scratch_dir} || exit 1
         puts "# stderr_path: #{stderr_path}"
         puts "##"
         new_job = Job.new
-        #new_job.submit_job_id = job_id.to_i
-        #new_job.script_path = gstore_job_script_paths[i]
         new_job.script_path = script_path
         new_job.submit_command = submit_command
         new_job.stdout_path = stdout_path
