@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241205-150115'
+# Version = '20241206-132831'
 
 require 'csv'
 require 'fileutils'
@@ -21,6 +21,7 @@ module SushiFabric
     config.module_source = nil
     config.course_mode = nil
     config.rails_host = nil
+    config.submit_job_script_dir = nil
   end
 
   # load custmized parameters if there is
@@ -43,6 +44,7 @@ module SushiFabric
     config.module_source = nil
     config.course_mode = nil
     config.rails_host = nil
+    config.submit_job_script_dir = nil
   end
 end
       EOF
@@ -56,6 +58,7 @@ end
   SCRATCH_DIR = config.scratch_dir
   MODULE_SOURCE = config.module_source
   RAILS_HOST = config.rails_host 
+  SUBMIT_JOB_SCRIPT_DIR = config.submit_job_script_dir
   unless File.exist?(GSTORE_DIR)
     FileUtils.mkdir_p GSTORE_DIR
   end
@@ -524,9 +527,8 @@ rm -rf #{@scratch_dir} || exit 1
     # this should be overwritten in a subclass
   end
   def generate_new_job_script(script_name, script_content)
-    @log_dir = "/misc/fgcz01/sushi/test_workflow_manager_by_masa_on_fgcz-h-037/logs"
     new_job_script = File.basename(script_name) + "_" + Time.now.strftime("%Y%m%d%H%M%S%L")
-    new_job_script = File.join(@log_dir, new_job_script)
+    new_job_script = File.join(SUBMIT_JOB_SCRIPT_DIR, new_job_script)
     open(new_job_script, 'w') do |out|
       out.print script_content
       out.print "\necho __SCRIPT END__\n"
@@ -538,8 +540,8 @@ rm -rf #{@scratch_dir} || exit 1
       script_name = script_name.split(/\.sh/).first + ".sh"
       new_job_script = generate_new_job_script(script_name, script_content)
       new_job_script_base = File.basename(new_job_script)
-      log_file = File.join(@log_dir, new_job_script_base + "_o.log")
-      err_file = File.join(@log_dir, new_job_script_base + "_e.log")
+      log_file = File.join(SUBMIT_JOB_SCRIPT_DIR, new_job_script_base + "_o.log")
+      err_file = File.join(SUBMIT_JOB_SCRIPT_DIR, new_job_script_base + "_e.log")
       command = "sbatch -o #{log_file} -e #{err_file} -N 1 #{option} #{new_job_script}"
       [command, new_job_script, log_file, err_file]
     else
