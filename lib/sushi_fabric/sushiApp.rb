@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241206-151758'
+# Version = '20241210-143807'
 
 require 'csv'
 require 'fileutils'
@@ -561,11 +561,6 @@ rm -rf #{@scratch_dir} || exit 1
     script_content = File.read(script_path)
 
     submit_command, new_script_path, stdout_path, stderr_path = submit_job_command(script_path, script_content, sbatch_options.join(' '))
-
-    puts "##"
-    puts "## [submit_command, new_script_path, stdout_path, stderr_path] =  #{[submit_command, script_path, stdout_path, stderr_path]}"
-    puts "##"
-
     [submit_command, new_script_path, stdout_path, stderr_path]
   end
   def preprocess
@@ -899,12 +894,12 @@ rm -rf #{@scratch_dir} || exit 1
       # save job and dataset relation in Sushi DB
       #job_ids.each_with_index do |job_id, i|
       submit_jobs.each do |submit_command, script_path, stdout_path, stderr_path|
-        puts "##"
+        puts "#"*20
         puts "# submit_command: #{submit_command}"
         puts "# script_path: #{script_path}"
         puts "# stdout_path: #{stdout_path}"
         puts "# stderr_path: #{stderr_path}"
-        puts "##"
+        puts "#"*20
         new_job = Job.new
         new_job.script_path = script_path
         new_job.submit_command = submit_command
@@ -913,6 +908,7 @@ rm -rf #{@scratch_dir} || exit 1
         new_job.next_dataset_id = @next_dataset_id
         new_job.status = "CREATED"
         new_job.save
+        new_job.user = (@user || "sushi_lover")
         new_job.data_set.jobs << new_job
         new_job.data_set.save
       end
