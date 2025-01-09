@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241216-111930'
+# Version = '20250109-103903'
 
 require 'csv'
 require 'fileutils'
@@ -877,43 +877,36 @@ rm -rf #{@scratch_dir} || exit 1
 
     # job submittion
     gstore_job_script_paths = []
-    submit_jobs = []
+    #submit_jobs = []
     @job_scripts.each_with_index do |job_script, i|
-      submit_command, script_path, stdout_path, stderr_path = submit(job_script, mock)
-      submit_jobs << [submit_command, script_path, stdout_path, stderr_path]
+      #submit_command, script_path, stdout_path, stderr_path = submit(job_script, mock)
+      #submit_jobs << [submit_command, script_path, stdout_path, stderr_path]
       gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
     end
 
     puts
     print 'job scripts: '
     p @job_scripts
+    print 'gstore_job_script_paths: '
+    p gstore_job_script_paths
 
 
     #unless @job_ids.empty? or NO_ROR
-    unless submit_jobs.empty?
+    #unless submit_jobs.empty?
+    unless gstore_job_script_paths.empty?
       # save job and dataset relation in Sushi DB
-      #job_ids.each_with_index do |job_id, i|
-      submit_jobs.each do |submit_command, script_path, stdout_path, stderr_path|
-        final_log_path = File.join(@gstore_project_dir, @result_dir_base, "scripts")
+      gstore_job_script_paths.each do |script_path|
         puts "#"*20
-        puts "# final_log_path: #{final_log_path}"
-        puts "# submit_command: #{submit_command}"
         puts "# script_path: #{script_path}"
-        puts "# stdout_path: #{stdout_path}"
-        puts "# stderr_path: #{stderr_path}"
         puts "#"*20
         new_job = Job.new
         new_job.script_path = script_path
-        new_job.submit_command = submit_command
-        new_job.stdout_path = stdout_path
-        new_job.stderr_path = stderr_path
         new_job.next_dataset_id = @next_dataset_id
-        new_job.final_log_path = final_log_path
         new_job.status = "CREATED"
-        new_job.save
         new_job.user = (@user || "sushi_lover")
-        new_job.data_set.jobs << new_job
-        new_job.data_set.save
+        new_job.save
+        #new_job.data_set.jobs << new_job
+        #new_job.data_set.save
       end
     end
 
