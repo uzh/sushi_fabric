@@ -21,4 +21,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler", "~> 2.2.10"
   spec.add_development_dependency "rake"
+  spec.add_dependency 'csv'
+  spec.add_dependency 'drb'
 end
+
