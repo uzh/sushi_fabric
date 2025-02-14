@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20241122-134036'
+# Version = '20250109-110636'
 
 require 'csv'
 require 'fileutils'
@@ -21,6 +21,7 @@ module SushiFabric
     config.module_source = nil
     config.course_mode = nil
     config.rails_host = nil
+    config.submit_job_script_dir = nil
   end
 
   # load custmized parameters if there is
@@ -43,6 +44,7 @@ module SushiFabric
     config.module_source = nil
     config.course_mode = nil
     config.rails_host = nil
+    config.submit_job_script_dir = nil
   end
 end
       EOF
@@ -56,6 +58,7 @@ end
   SCRATCH_DIR = config.scratch_dir
   MODULE_SOURCE = config.module_source
   RAILS_HOST = config.rails_host 
+  SUBMIT_JOB_SCRIPT_DIR = config.submit_job_script_dir
   unless File.exist?(GSTORE_DIR)
     FileUtils.mkdir_p GSTORE_DIR
   end
@@ -523,58 +526,42 @@ rm -rf #{@scratch_dir} || exit 1
   def commands
     # this should be overwritten in a subclass
   end
-  def submit_command(job_script)
-    gsub_options = []
-    gsub_options << "-c #{@params['cores']}" unless @params['cores'].to_s.empty?
-    gsub_options << "-n #{@params['node']}" unless @params['node'].to_s.empty?
-    gsub_options << "-p #{@params['partition']}" unless @params['partition'].to_s.empty?
-    gsub_options << "-r #{@params['ram']}" unless @params['ram'].to_s.empty?
-    gsub_options << "-s #{@params['scratch']}" unless @params['scratch'].to_s.empty?
-    gsub_options << "-i #{@params['nice']}" unless @params['nice'].to_s.empty?
-    command = "wfm_monitoring --server #{WORKFLOW_MANAGER} --user #{@user} --project #{@project.gsub(/p/,'')} --logdir #{@gstore_script_dir} #{job_script} #{gsub_options.join(' ')}"
-    puts "submit: #{command}"
-
-    project_number = @project.gsub(/p/, '')
-    @workflow_manager||=DRbObject.new_with_uri(WORKFLOW_MANAGER)
-    script_content = File.read(job_script)
-    job_id = 0
-    begin
-      #job_id = @workflow_manager.start_monitoring(job_script, @user, 0, script_content, project_number, gsub_options.join(' '), @gstore_script_dir)
-      job_id = @workflow_manager.start_monitoring3(job_script, script_content, @user, project_number, gsub_options.join(' '), @gstore_script_dir, @next_dataset_id, RAILS_HOST)
-    rescue => e
-      time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-      @logger.error("*"*50)
-      @logger.error("submit_command error #{time}")
-      @logger.error("error: #{e}")
-      @logger.error("job_script: #{job_script}, @user: #{@user}, script_content: #{script_content.class} #{script_content.to_s.length} chrs, project_number: #{project_number}, gsub_options: #{gsub_options}, job_id: #{job_id}")
-      @logger.error("*"*50)
+  def generate_new_job_script(script_name, script_content)
+    new_job_script = File.basename(script_name) + "_" + Time.now.strftime("%Y%m%d%H%M%S%L")
+    new_job_script = File.join(SUBMIT_JOB_SCRIPT_DIR, new_job_script)
+    open(new_job_script, 'w') do |out|
+      out.print script_content
+      out.print "\necho __SCRIPT END__\n"
     end
-    job_id
+    new_job_script
   end
-  def submit(job_script, mock=false)
-    begin
-      job_id = unless mock
-                 i = submit_command(job_script)
-                 i.to_i
-               else
-                 #Time.now.to_f.to_s.gsub('.', '')
-                 1234
-               end
-      unless job_id.to_i > 1
-        @logger.error("#"*50)
-        time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-        @logger.error("error happened in job submitting, but maybe fine. #{time}")
-        @logger.error("#"*50)
-        job_id = nil
-      end
-    rescue
-      @logger.error("@"*50)
-      time = Time.now.strftime("[%Y.%m.%d %H:%M:%S]")
-      @logger.error("error happened in job submitting, but maybe fine. #{time}")
-      @logger.error("@"*50)
-      job_id = nil
+  def submit_job_command(script_file, script_content, option='')
+    if script_name = File.basename(script_file) and script_name =~ /\.sh/
+      script_name = script_name.split(/\.sh/).first + ".sh"
+      new_job_script = generate_new_job_script(script_name, script_content)
+      new_job_script_base = File.basename(new_job_script)
+      log_file = File.join(SUBMIT_JOB_SCRIPT_DIR, new_job_script_base + "_o.log")
+      err_file = File.join(SUBMIT_JOB_SCRIPT_DIR, new_job_script_base + "_e.log")
+      command = "sbatch -o #{log_file} -e #{err_file} -N 1 #{option} #{new_job_script}"
+      [command, new_job_script, log_file, err_file]
+    else
+      err_msg = "submit_job_command, ERROR: script_name is not *.sh: #{File.basename(script_file)}"
+      warn err_msg
+      raise err_msg
     end
-    job_id
+  end
+  def submit(script_path, mock=false)
+    sbatch_options = []
+    sbatch_options << "--mem=#{@params['ram']}G" unless @params['ram'].to_s.empty?
+    sbatch_options << "-n #{@params['cores']}" unless @params['cores'].to_s.empty?
+    sbatch_options << "--gres=scratch:#{@params['scratch']}" unless @params['scratch'].to_s.empty?
+    sbatch_options << "-p #{@params['partition']}" unless @params['partition'].to_s.empty?
+    sbatch_options << "--nice=#{@params['nice']}" unless @params['nice'].to_s.empty?
+
+    script_content = File.read(script_path)
+
+    submit_command, new_script_path, stdout_path, stderr_path = submit_job_command(script_path, script_content, sbatch_options.join(' '))
+    [submit_command, new_script_path, stdout_path, stderr_path]
   end
   def preprocess
     # this should be overwritten in a subclass
@@ -890,29 +877,37 @@ rm -rf #{@scratch_dir} || exit 1
 
     # job submittion
     gstore_job_script_paths = []
+    #submit_jobs = []
     @job_scripts.each_with_index do |job_script, i|
-      if job_id = submit(job_script, mock)
-        @job_ids << job_id
-        print "Submit job #{File.basename(job_script)} job_id=#{job_id}"
-        gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
-      end
+      #submit_command, script_path, stdout_path, stderr_path = submit(job_script, mock)
+      #submit_jobs << [submit_command, script_path, stdout_path, stderr_path]
+      gstore_job_script_paths << File.join(@gstore_script_dir, File.basename(job_script))
     end
 
     puts
     print 'job scripts: '
     p @job_scripts
+    print 'gstore_job_script_paths: '
+    p gstore_job_script_paths
 
 
-    unless @job_ids.empty? or NO_ROR
+    #unless @job_ids.empty? or NO_ROR
+    #unless submit_jobs.empty?
+    unless gstore_job_script_paths.empty?
       # save job and dataset relation in Sushi DB
-      job_ids.each_with_index do |job_id, i|
+      gstore_job_script_paths.each do |script_path|
         new_job = Job.new
-        new_job.submit_job_id = job_id.to_i
-        new_job.script_path = gstore_job_script_paths[i]
+        new_job.script_path = script_path
         new_job.next_dataset_id = @next_dataset_id
+        new_job.status = "CREATED"
+        new_job.user = (@user || "sushi_lover")
+        new_job.input_dataset_id = dataset.id if dataset
         new_job.save
-        new_job.data_set.jobs << new_job
-        new_job.data_set.save
+        #if dataset
+        #  new_job.data_set = dataset
+        #  new_job.data_set.jobs << new_job
+        #  new_job.data_set.save
+        #end
       end
     end
 
