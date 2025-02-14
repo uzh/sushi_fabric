@@ -1,7 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
-# Version = '20190425-141759'
+# Version = '20250214-145602'
 
+require 'logger'
 require 'sushi_fabric'
 
 opt = OptionParser.new do |o|
